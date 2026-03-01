@@ -1,4 +1,4 @@
-import { events, app as neuApp, window as neuWindow, os } from '@neutralinojs/lib';
+import { events, app as neuApp, window as neuWindow, os, filesystem, server } from '@neutralinojs/lib';
 import beautify from 'json-beautify';
 import path from 'path-browserify';
 import { toast } from 'svelte-sonner';
@@ -9,6 +9,7 @@ import { RPCController } from '../tools/rpc';
 import { shell, spawn, type SpawnEventEmitter } from '../tools/shell';
 import shellFS from '../tools/shellfs';
 import { getMode, sleep } from '../utils';
+import { getDataDir } from '../utils/paths';
 import { focusWindow, setWindowVisibility } from '../window';
 import onGameEvent from './events';
 import { RobloxFFlags } from './fflags';
@@ -23,14 +24,19 @@ import {
 	selectServerWithPreferredRegion,
 } from './region-selector';
 import { formatDatacenterLocation } from './rovalra-api';
+import { parseBootstrapperTheme } from '@/windows/bootstrapper/wpfui-theme';
 import Logger from '../utils/logger';
 
 const logger = Logger.withContext('Launch');
 
+/** Delay in ms added between each visible bootstrapper step when the setting is enabled. */
+const FIXED_STEP_DELAY = 1200;
+
 let allowFixedDelays = true;
 getValue<boolean>('misc.advanced.allow_fixed_loading_times')
 	.then((value) => {
-		allowFixedDelays = value;
+		// value is null when the setting has never been saved — default to true
+		allowFixedDelays = value ?? true;
 	})
 	.catch((err) => {
 		logger.error("Couldn't determine loading time settings:", err);
@@ -81,7 +87,7 @@ async function validateAndCleanup(): Promise<boolean> {
 async function validateFlags(showFlagErrorPopup: LaunchHandlers['showFlagErrorPopup'], checkFlags = true): Promise<any> {
 	await updateBootstrapper('bootstrapper:text', { text: 'Validating preset flags...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 15 });
-	if (allowFixedDelays) await sleep(300);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 	const presetFlags = await RobloxFFlags.parseFlags(true);
 
@@ -95,7 +101,7 @@ async function validateFlags(showFlagErrorPopup: LaunchHandlers['showFlagErrorPo
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Validating custom flags...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 25 });
-	if (allowFixedDelays) await sleep(300);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 	const editorFlags = await RobloxFFlags.parseFlags(false);
 
@@ -110,7 +116,7 @@ async function validateFlags(showFlagErrorPopup: LaunchHandlers['showFlagErrorPo
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Validating game profiles...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 30 });
-	if (allowFixedDelays) await sleep(250);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 	if (checkFlags && editorFlags.invalidProfileFlags && editorFlags.invalidProfileFlags.length > 0) {
 		const allFlagKeys = editorFlags.invalidProfileFlags.reduce(
@@ -139,38 +145,162 @@ async function setupBootstrapper(): Promise<void> {
 	const neutralinoConfig = await neuApp.getConfig();
 	const vitePort = neutralinoConfig.cli.frontendLibrary.devUrl.split(':').pop();
 
-	const bootstrapperHtmlUrl =
+	const baseHtmlUrl =
 		getMode() === 'dev'
 			? `http://localhost:${vitePort}/bootstrapper.html`
 			: `http://localhost:${window.NL_PORT}/bootstrapper.html`;
 
-	const viewerPath = libraryPath('transparent_viewer');
-	const windowWidth = 700;
-	const windowHeight = 450;
+	const dataDir = await getDataDir();
+	const themePath = path.join(dataDir, 'bootstrapper-theme.xml');
+	const assetsDir = path.join(dataDir, 'bootstrapper-theme-assets');
+	let hasTheme = await shellFS.exists(themePath);
 
-	const viewerArgs = ['--width', windowWidth.toString(), '--height', windowHeight.toString(), '--url', bootstrapperHtmlUrl];
+	if (hasTheme) {
+		let themeWidth = 700;
+		let themeHeight = 450;
+		let themeB64 = '';
 
-	logger.info(`Spawning transparent_viewer: ${viewerPath} ${viewerArgs.join(' ')}`);
-	bootstrapperProcess = await spawn(viewerPath, viewerArgs, { skipStderrCheck: true });
+		try {
+			const xml = await shellFS.readFile(themePath);
+			const parsed = parseBootstrapperTheme(xml);
+			if (parsed) {
+				themeWidth = parsed.width;
+				themeHeight = parsed.height;
 
-	await shellFS.writeFile('/tmp/appleblox_bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
+				// Mount theme assets so the child window can load them via the main backend's HTTP server.
+				try {
+					const dirStats = await filesystem.getStats(assetsDir);
+					if (dirStats.isDirectory) {
+						await server.mount('/bootstrapper-assets/', assetsDir);
+					}
+				} catch {}
 
-	bootstrapperProcess.on('stdOut', (data) => logger.info('[Bootstrapper]', data));
-	bootstrapperProcess.on('stdErr', (data) => logger.error('[Bootstrapper]', data));
-	bootstrapperProcess.on('exit', (code) => {
-		logger.info(`Bootstrapper exited with code ${code}`);
-		if (bootstrapperProcess) {
-			bootstrapperProcess = null;
-			if (!rbxInstance) {
-				neuWindow.show().then(focusWindow);
+				// Base64url-encode the parsed theme and pass it in the URL so the child window
+				// can render the theme without needing a separate filesystem read.
+				themeB64 = btoa(unescape(encodeURIComponent(JSON.stringify(parsed))))
+					.replace(/\+/g, '-')
+					.replace(/\//g, '_')
+					.replace(/=/g, '');
 			}
-		}
-	});
+		} catch {}
 
-	initialProgressListener = events.on('bootstrapper:ready', async () => {
+		// Scale proportionally to a 1920×1080 Windows reference so themes occupy the same
+		// relative fraction of the screen as they would on a typical 1080p Windows display.
+		// No cap at 1 — on a 2560-wide screen a 600px theme becomes ~800px (same proportion).
+		// The last two terms clamp themes that are inherently larger than 1920×1080 so they
+		// always fit within 95% of the screen.
+		const screenWidth = window.screen.width;
+		const screenHeight = window.screen.height;
+		const scale = Math.min(
+			screenWidth / 1920,
+			screenHeight / 1080,
+			(screenWidth * 0.95) / themeWidth,
+			(screenHeight * 0.95) / themeHeight
+		);
+		const scaledWidth = Math.round(themeWidth * scale);
+		const scaledHeight = Math.round(themeHeight * scale);
+
+		// Resolve the Neutralino binary path: dev uses the universal binary in bin/ (no arch
+		// detection needed), prod uses the main binary in Contents/MacOS/.
+		const w = window as any;
+		const nlPath: string = window.NL_PATH ?? '';
+		const isDev = getMode() === 'dev';
+		const binaryPath = isDev
+			? path.join(nlPath, 'bin', 'neutralino-mac_universal')
+			: path.join(nlPath, '../MacOS/main');
+
+		// Build URL — include parent's NL_TOKEN/NL_PORT so the child frontend connects to
+		// the parent Neutralino backend (required for events.broadcast to reach the parent).
+		const bootstrapperUrlParams = new URLSearchParams({
+			nl_token: w.NL_TOKEN ?? '',
+			nl_port: String(window.NL_PORT ?? ''),
+			scale: scale.toFixed(4),
+		});
+		if (themeB64) bootstrapperUrlParams.set('theme', themeB64);
+		const bootstrapperUrl = `${baseHtmlUrl}?${bootstrapperUrlParams.toString()}`;
+
+		// Compute centered position using raw x/y to avoid the crashing center() C++ call.
+		// Use scaled window dimensions for centering so the window is always on screen.
+		// Clamp to 0 so the window never starts off-screen.
+		const centeredX = Math.max(0, Math.round((screenWidth - scaledWidth) / 2));
+		const centeredY = Math.max(0, Math.round((screenHeight - scaledHeight) / 2));
+
+		logger.info(`Spawning themed Neutralino bootstrapper (${scaledWidth}×${scaledHeight}, scale=${scale.toFixed(3)})`);
+
+		// In dev, --res-mode=directory tells the child to load neutralino.config.json from
+		// --path (the project root) instead of looking for a resources.neu bundle that
+		// doesn't exist in the dev tree, which would cause it to load default config.
+		const resModeArg = isDev ? '--res-mode=directory' : '--res-mode=bundle';
+
+		try {
+			bootstrapperProcess = await spawn(
+				binaryPath,
+				[
+					`--path=${nlPath}`,
+					resModeArg,
+					`--url=${bootstrapperUrl}`,
+					`--window-hidden=false`,
+					`--window-width=${themeWidth}`,
+					`--window-height=${themeHeight}`,
+					`--window-borderless=true`,
+					`--window-transparent=true`,
+					`--window-always-on-top=true`,
+					`--window-resizable=false`,
+					`--window-center=false`,
+					`--window-inject-globals=false`,
+					`--window-exit-process-on-close=true`,
+					`--window-x=${centeredX}`,
+					`--window-y=${centeredY}`,
+				],
+				{ skipStderrCheck: true }
+			);
+
+			await shellFS.writeFile('/tmp/appleblox_bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
+
+			bootstrapperProcess.on('stdOut', (data) => logger.info('[Bootstrapper]', data));
+			bootstrapperProcess.on('stdErr', (data) => logger.error('[Bootstrapper]', data));
+			bootstrapperProcess.on('exit', (code) => {
+				logger.info(`Bootstrapper exited with code ${code}`);
+				if (bootstrapperProcess) {
+					bootstrapperProcess = null;
+					if (!rbxInstance) {
+						neuWindow.show().then(focusWindow);
+					}
+				}
+			});
+		} catch (e) {
+			logger.warn('Failed to spawn themed bootstrapper, falling back to default UI:', e);
+			hasTheme = false;
+		}
+	}
+
+	if (!hasTheme) {
+		const viewerPath = libraryPath('transparent_viewer');
+		const viewerArgs = ['--width', '700', '--height', '450', '--url', baseHtmlUrl];
+
+		logger.info(`Spawning transparent_viewer bootstrapper`);
+		bootstrapperProcess = await spawn(viewerPath, viewerArgs, { skipStderrCheck: true });
+
+		await shellFS.writeFile('/tmp/appleblox_bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
+
+		bootstrapperProcess.on('stdOut', (data) => logger.info('[Bootstrapper]', data));
+		bootstrapperProcess.on('stdErr', (data) => logger.error('[Bootstrapper]', data));
+		bootstrapperProcess.on('exit', (code) => {
+			logger.info(`Bootstrapper exited with code ${code}`);
+			if (bootstrapperProcess) {
+				bootstrapperProcess = null;
+				if (!rbxInstance) {
+					neuWindow.show().then(focusWindow);
+				}
+			}
+		});
+	}
+
+	initialProgressListener = async () => {
 		await updateBootstrapper('bootstrapper:text', { text: 'Initializing launch sequence...' });
 		await updateBootstrapper('bootstrapper:progress', { progress: 5 });
-	});
+	};
+	events.on('bootstrapper:ready', initialProgressListener);
 
 	await sleep(500);
 }
@@ -196,6 +326,7 @@ async function cleanupBootstrapper(): Promise<void> {
 		} catch {}
 		initialProgressListener = null;
 	}
+
 	if (bootstrapperProcess) {
 		try {
 			await bootstrapperProcess.kill(true);
@@ -271,7 +402,7 @@ async function applyRegionSelection(originalUrl?: string): Promise<string | unde
 async function prepareRobloxSettings(robloxPath: string, fflags: any): Promise<void> {
 	await updateBootstrapper('bootstrapper:text', { text: 'Checking existing settings...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 35 });
-	if (allowFixedDelays) await sleep(200);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 	const settingsPath = path.join(robloxPath, 'Contents/MacOS/ClientSettings/');
 	const settingsFile = path.join(settingsPath, 'ClientAppSettings.json');
@@ -279,18 +410,18 @@ async function prepareRobloxSettings(robloxPath: string, fflags: any): Promise<v
 	if (await shellFS.exists(settingsFile)) {
 		await updateBootstrapper('bootstrapper:text', { text: 'Removing old settings...' });
 		await updateBootstrapper('bootstrapper:progress', { progress: 40 });
-		if (allowFixedDelays) await sleep(250);
+		if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 		await shellFS.remove(settingsPath);
 	}
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Creating settings directory...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 45 });
-	if (allowFixedDelays) await sleep(200);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 	await shellFS.createDirectory(settingsPath);
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Writing FastFlags configuration...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 50 });
-	if (allowFixedDelays) await sleep(300);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 	await shellFS.writeFile(settingsFile, JSON.stringify(fflags));
 }
 
@@ -298,25 +429,25 @@ async function applyModsAndLaunch(settings: LaunchSettings, robloxUrl?: string):
 	// Create icon color backup BEFORE mods are applied (so we have the original files)
 	await updateBootstrapper('bootstrapper:text', { text: 'Creating backups...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 53 });
-	if (allowFixedDelays) await sleep(150);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 	await RobloxMods.createIconColorBackup();
 
 	if (settings.areModsEnabled) {
 		await updateBootstrapper('bootstrapper:text', { text: 'Copying mod files...' });
 		await updateBootstrapper('bootstrapper:progress', { progress: 55 });
-		if (allowFixedDelays) await sleep(350);
+		if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 		await RobloxMods.copyToFiles();
 	}
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Applying custom fonts...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 60 });
-	if (allowFixedDelays) await sleep(250);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 	await RobloxMods.applyCustomFont();
 
 	// Apply icon color AFTER mods so it takes priority over any mod-modified BuilderIcons
 	await updateBootstrapper('bootstrapper:text', { text: 'Applying icon color...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 70 });
-	if (allowFixedDelays) await sleep(200);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 	await RobloxMods.applyIconColor();
 
 	// Legacy resolution is now handled via launch argument in RobloxInstance.start()
@@ -324,14 +455,14 @@ async function applyModsAndLaunch(settings: LaunchSettings, robloxUrl?: string):
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Initializing Roblox instance...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 80 });
-	if (allowFixedDelays) await sleep(400);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 	const robloxInstance = new RobloxInstance(true);
 	await robloxInstance.init();
 
 	await updateBootstrapper('bootstrapper:text', { text: 'Starting Roblox...' });
 	await updateBootstrapper('bootstrapper:progress', { progress: 100 });
-	if (allowFixedDelays) await sleep(450);
+	if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 	await cleanupBootstrapper();
 	await robloxInstance.start(robloxUrl);
@@ -410,7 +541,7 @@ export async function launchRoblox(
 
 		await updateBootstrapper('bootstrapper:text', { text: 'Checking Roblox installation...' });
 		await updateBootstrapper('bootstrapper:progress', { progress: 10 });
-		if (allowFixedDelays) await sleep(250);
+		if (allowFixedDelays) await sleep(FIXED_STEP_DELAY);
 
 		const hasRoblox = await RobloxUtils.hasRoblox();
 
