@@ -78,18 +78,6 @@ AppleBlox connects to the following external services:
 
 AppleBlox does not collect, store, or transmit any personal data beyond what is described above. No analytics or telemetry are included.
 
-## Code Signing Policy
-
-Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
-
-**Team roles:**
-- Authors and Reviewers: [AppleBlox organization members](https://github.com/orgs/AppleBlox/people)
-- Approvers: [AppleBlox organization owners](https://github.com/orgs/AppleBlox/people?query=role%3Aowner)
-
-**Privacy policy:** See [Privacy Policy](#privacy-policy) above.
-
-This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
-
 ## Contributing
 
 Contributions are welcome. Please feel free to submit issues, pull requests, or discuss ideas. For further discussion, contact `contact@origaming.ch` or reach out on Discord `@Origaming`.
