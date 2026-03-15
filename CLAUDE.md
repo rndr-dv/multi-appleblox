@@ -228,6 +228,7 @@ Prettier configuration (`.prettierrc`):
 - Semicolons required
 - Print width: 130
 - Svelte plugin enabled
+- Comments (except JSDoc) must be included in code — do not strip inline comments or block comments when writing or editing code
 
 ## Common Development Workflows
 
