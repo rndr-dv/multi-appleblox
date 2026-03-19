@@ -229,6 +229,7 @@ Prettier configuration (`.prettierrc`):
 - Print width: 130
 - Svelte plugin enabled
 - Comments (except JSDoc) must be included in code — do not strip inline comments or block comments when writing or editing code
+- Only add comments for: (1) JSDoc on exported functions/types, (2) genuinely obscure tricks or workarounds that can't be made self-evident through naming. Do not add comments that restate what the code does, section headers, or obvious logic explanations.
 
 ## Common Development Workflows
 
