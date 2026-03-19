@@ -2,11 +2,11 @@
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { app, events, os } from '@neutralinojs/lib';
+	import { app, clipboard, events, os } from '@neutralinojs/lib';
 	import { version } from '@root/package.json';
-	import { FileArchive, FolderCog, FolderOpen, Trash2 } from 'lucide-svelte';
+	import { ClipboardCopy, ExternalLink, FileArchive, FolderCog, FolderOpen, Trash2 } from 'lucide-svelte';
 	import path from 'path-browserify';
-	import { getContext } from 'svelte';
+	import { getContext, onMount, onDestroy } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { SettingsPanelBuilder, getConfigPath } from '../components/settings';
 	import Panel from '../components/settings/panel.svelte';
@@ -16,6 +16,7 @@
 	import { removeAllAccounts } from '../ts/roblox/accounts';
 	import { getDataDir } from '../ts/utils/paths';
 	import Logger from '@/windows/main/ts/utils/logger';
+	import { collectDebugReport, formatDebugReportAsText } from '../ts/utils/debug';
 
 	const { getCurrentPage } = getContext('pageData') as { getCurrentPage: () => string };
 
@@ -58,9 +59,15 @@
 	}
 
 	// Had to do this because of a bug I couldn't fix
-	events.on('exportSettings', () => {
+	function handleExportSettings() {
 		if (getCurrentPage() === 'misc') return;
 		exportSettingsPopup = true;
+	}
+	onMount(() => {
+		events.on('exportSettings', handleExportSettings);
+	});
+	onDestroy(() => {
+		events.off('exportSettings', handleExportSettings);
 	});
 
 	async function exportSettings() {
@@ -88,11 +95,32 @@
 			.filter((file) => file.length > 0)
 			.map((file) => `logs/${file}`);
 
-		await shellFS.zip(archivePath, ['config', 'theme.css', ...lastTenLogs], {
+		const summaryPath = path.join(appleBloxPath, 'summary.txt');
+		try {
+			const report = await collectDebugReport();
+			const summaryText = formatDebugReportAsText(report);
+			await shellFS.writeFile(summaryPath, summaryText);
+		} catch (err) {
+			Logger.warn('Could not generate debug summary for export:', err);
+		}
+
+		const filesToZip = ['config', 'theme.css', ...lastTenLogs];
+		if (await shellFS.exists(summaryPath)) {
+			filesToZip.unshift('summary.txt');
+		}
+
+		await shellFS.zip(archivePath, filesToZip, {
 			recursive: true,
 			cwd: appleBloxPath,
 		});
-		toast.success('Your settings have been exported.', { duration: 3000 });
+
+		try {
+			if (await shellFS.exists(summaryPath)) {
+				await shellFS.remove(summaryPath);
+			}
+		} catch {}
+
+		toast.success('Your debug bundle has been exported.', { duration: 3000 });
 		await shellFS.open(archivePath, { reveal: true });
 	}
 
@@ -117,6 +145,20 @@
 				} else {
 					toast.error('Roblox installation path not found.');
 				}
+				break;
+			case 'copy_debug_report':
+				try {
+					const report = await collectDebugReport();
+					const text = formatDebugReportAsText(report);
+					await clipboard.writeText(text);
+					toast.success('Debug report copied to clipboard');
+				} catch (err) {
+					Logger.error('Failed to copy debug report:', err);
+					toast.error('Failed to generate debug report');
+				}
+				break;
+			case 'open_docs':
+				os.open('https://docs.appleblox.com');
 				break;
 			case 'export_config':
 				exportSettingsPopup = true;
@@ -150,7 +192,7 @@
 					default: false,
 				})
 				.addSwitch({
-					label: 'Allow fixed fixed loading times',
+					label: 'Allow fixed loading times',
 					description:
 						'Set a minimal time for loading steps during Roblox launching. That way, you can better see the bootstrapper.',
 					id: 'allow_fixed_loading_times',
@@ -164,11 +206,25 @@
 					icon: { component: FolderOpen },
 				})
 				.addButton({
-					label: 'Export Settings',
-					description: 'Save your logs and configuration as an archive',
+					label: 'Copy Debug Report',
+					description: 'Copy a structured debug report to the clipboard',
+					id: 'copy_debug_report',
+					variant: 'default',
+					icon: { component: ClipboardCopy },
+				})
+				.addButton({
+					label: 'Export Debug Bundle',
+					description: 'Save your logs, configuration, and debug summary as an archive',
 					id: 'export_config',
 					variant: 'secondary',
 					icon: { component: FileArchive },
+				})
+				.addButton({
+					label: 'Documentation',
+					description: 'Open the AppleBlox documentation website',
+					id: 'open_docs',
+					variant: 'outline',
+					icon: { component: ExternalLink },
 				})
 				.addButton({
 					label: 'AppleBlox Folder',
