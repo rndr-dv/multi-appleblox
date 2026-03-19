@@ -109,12 +109,6 @@
 					component: FlagEditor,
 					id: 'fflags_editor',
 				})
-			// .addSwitch({
-			// 	label: 'Ignore Flag Warnings',
-			// 	description: 'Suppress invalid flag notifications',
-			// 	id: 'ignore_flags_warning',
-			// 	default: false,
-			// })
 		)
 		.build();
 </script>

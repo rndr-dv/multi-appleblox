@@ -49,8 +49,6 @@
 				await handleBackupCreation();
 				return;
 			case "auth_ticket":
-				// const authTicket = await getAuthTicketForAccount()
-				// console.debug(authTicket)
 				return;
 		}
 

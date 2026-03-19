@@ -44,15 +44,21 @@ export async function getRegionPreference(): Promise<RegionPreference> {
 
 	try {
 		enabled = (await getValue<boolean>('region.preferences.enabled')) === true;
-	} catch {}
+	} catch (err) {
+		logger.debug('Failed to read region.preferences.enabled:', err);
+	}
 
 	try {
 		region = (await getValue<string>('region.preferences.preferred_region')) || 'AUTO';
-	} catch {}
+	} catch (err) {
+		logger.debug('Failed to read region.preferences.preferred_region:', err);
+	}
 
 	try {
 		contributionConsent = (await getValue<boolean>('region.preferences.contribution_consent')) === true;
-	} catch {}
+	} catch (err) {
+		logger.debug('Failed to read region.preferences.contribution_consent:', err);
+	}
 
 	return {
 		enabled,

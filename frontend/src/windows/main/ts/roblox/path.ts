@@ -176,12 +176,3 @@ export async function detectRobloxPath(): Promise<string | null> {
 		return null;
 	}
 }
-
-/**
- * Gets the most recent Roblox installation path.
- * @deprecated Use detectRobloxPath() instead for better error handling
- * @returns The path to Roblox.app, or null if not found
- */
-export async function getMostRecentRoblox(): Promise<string | null> {
-	return detectRobloxPath();
-}

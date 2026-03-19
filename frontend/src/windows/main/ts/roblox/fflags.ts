@@ -260,7 +260,7 @@ export class RobloxFFlags {
 	}
 }
 
-class FastFlagsList {
+export class FastFlagsList {
 	private toParseFlags: AddFlagOpts[] = [];
 	private skipPanels: string[] = [];
 	private settings: { [key: string]: any } = {};

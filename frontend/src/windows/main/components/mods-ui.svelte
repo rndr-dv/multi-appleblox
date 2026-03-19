@@ -134,7 +134,7 @@
 				}
 			}
 		} catch (err) {
-			toast.error(`An error occured while enabling/disabling mod: ${err}`);
+			toast.error(`An error occurred while enabling/disabling mod: ${err}`);
 			Logger.withContext('mods-ui').error(err);
 		}
 	}
@@ -185,7 +185,7 @@
 						await sleep(10);
 						await shellFS.open(folderPath);
 					} catch (err) {
-						toast.error(`An error occured: ${err}`);
+						toast.error(`An error occurred: ${err}`);
 						Logger.withContext('mods-panel').error(err);
 					}
 				}}
@@ -196,14 +196,13 @@
 			<Button
 				variant="outline"
 				size="sm"
-				on:click={() => {
+				on:click={async () => {
 					refreshSpin = true;
-					setTimeout(() => {
+					try {
+						mods = await loadModsWithDetails();
+					} finally {
 						refreshSpin = false;
-					}, 500);
-					loadModsWithDetails().then((m) => {
-						mods = m;
-					});
+					}
 				}}
 			>
 				<RefreshCcw class={`h-4 w-4 ${refreshSpin ? 'animate-spin' : ''}`} />

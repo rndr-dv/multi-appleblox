@@ -40,7 +40,7 @@
 					await Roblox.Utils.createShortcut();
 				} catch (err) {
 					Logger.error(err);
-					toast.error('An error occured while trying to save the shortcut', {
+					toast.error('An error occurred while trying to save the shortcut', {
 						duration: 2000,
 					});
 					return;
@@ -62,8 +62,8 @@
 					await setValue('roblox.background.background_updates', !state);
 					events.broadcast('app:reload');
 					if ((err as Error).message.includes('-128')) return;
-					toast.error('An error ocurred while setting Roblox background updates state');
-					Logger.error('An error ocurred while setting Roblox background updates state:', err);
+					toast.error('An error occurred while setting Roblox background updates state');
+					Logger.error('An error occurred while setting Roblox background updates state:', err);
 				}
 		}
 	}
@@ -219,7 +219,7 @@
 	<Panel {panel} on:switch={switchClicked} on:button={buttonClicked} {render} {overrides} />
 {:catch error}
 	{#if render}
-		<h2 class="text-red-500">An error occured while loading settings overrides</h2>
+		<h2 class="text-red-500">An error occurred while loading settings overrides</h2>
 		<p class="text-red-300">{error}</p>
 	{/if}
 {/await}

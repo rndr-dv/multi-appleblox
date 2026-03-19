@@ -48,12 +48,16 @@
 	let lastPlayedGame: GameHistoryEntry | null = null;
 
 	// CMD + R to install Roblox
-	events.on('installRoblox', () => {
+	function handleInstallRoblox() {
 		showInstallDialog = true;
-	});
+	}
+	events.on('installRoblox', handleInstallRoblox);
 
 	// Check if Roblox is installed on mount and load last played game
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	onDestroy(() => {
+		events.off('installRoblox', handleInstallRoblox);
+	});
 	onMount(async () => {
 		robloxInstalled = await Roblox.Utils.hasRoblox();
 		await loadLastPlayedGame();
@@ -196,7 +200,7 @@
 			</div>
 		{/if}
 
-		<div on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="tooltip" class="w-full px-4">
+		<div on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} class="w-full px-4">
 			<Button
 				class={`${
 					isLaunched
