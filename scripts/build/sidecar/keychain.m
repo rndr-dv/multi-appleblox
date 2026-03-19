@@ -8,6 +8,27 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/Security.h>
+#import <AppKit/AppKit.h>
+
+void setAppleBloxIcon(void) {
+    NSString *binaryPath = [NSProcessInfo processInfo].arguments[0];
+    NSString *appBundlePath = [[[[binaryPath
+        stringByDeletingLastPathComponent]
+        stringByDeletingLastPathComponent]
+        stringByDeletingLastPathComponent]
+        stringByDeletingLastPathComponent];
+
+    NSString *iconPath = [appBundlePath stringByAppendingPathComponent:
+                          @"Contents/Resources/AppIcon.icns"];
+
+    if ([[NSFileManager defaultManager] fileExistsAtPath:iconPath]) {
+        NSImage *icon = [[NSImage alloc] initWithContentsOfFile:iconPath];
+        if (icon) {
+            [NSApplication sharedApplication];
+            [[NSApplication sharedApplication] setApplicationIconImage:icon];
+        }
+    }
+}
 
 // Security: Clear sensitive data from memory
 void secureZeroMemory(void *ptr, size_t len) {
@@ -147,6 +168,8 @@ void printUsage(const char *programName) {
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
+        setAppleBloxIcon();
+
         if (argc < 4) {
             printUsage(argv[0]);
             return 1;

@@ -17,10 +17,11 @@
 		updateAccountAvatar,
 		isAccountInBinaryCookies,
 		validateAllAccounts,
+		migrateFromSingleAccount,
 		type AccountInfo,
 		launchRobloxWithActiveAccount,
 	} from '../../ts/roblox/accounts';
-	import { retrieveCredential, deleteCredential } from '../../ts/tools/keychain';
+	import { retrieveCredential, deleteCredential, hasKeychainConsent, grantKeychainConsent } from '../../ts/tools/keychain';
 	import { libraryPath } from '../../ts/libraries';
 	import { spawn } from '../../ts/tools/shell';
 	import { Curl } from '../../ts/tools/curl';
@@ -48,6 +49,7 @@
 	let showAddAccountDialog = false;
 	let showManualEntryDialog = false;
 	let showDeleteDialog = false;
+	let showKeychainConsentDialog = false;
 	let accountToDelete: AccountInfo | null = null;
 	let cookieInput = '';
 	let isValidating = false;
@@ -71,7 +73,16 @@
 	}
 
 	onMount(async () => {
-		await loadAccounts();
+		if (hasKeychainConsent()) {
+			await loadAccounts();
+		} else {
+			const existingAccounts = await getAccounts();
+			if (existingAccounts.length > 0) {
+				showKeychainConsentDialog = true;
+			} else {
+				isLoading = false;
+			}
+		}
 	});
 
 	async function loadAccounts() {
@@ -130,6 +141,29 @@
 			logger.error('Failed to load accounts:', err);
 		}
 		isLoading = false;
+	}
+
+	let pendingAddAccount = false;
+
+	async function handleKeychainConsent() {
+		grantKeychainConsent();
+		showKeychainConsentDialog = false;
+		await migrateFromSingleAccount();
+		await loadAccounts();
+
+		if (pendingAddAccount) {
+			pendingAddAccount = false;
+			showAddAccountDialog = true;
+		}
+	}
+
+	function handleAddAccountClick() {
+		if (!hasKeychainConsent()) {
+			pendingAddAccount = true;
+			showKeychainConsentDialog = true;
+		} else {
+			showAddAccountDialog = true;
+		}
 	}
 
 	async function handleSetActive(userId: number) {
@@ -394,7 +428,7 @@
 
 			<!-- Add account button -->
 			<div class="mt-4">
-				<Button variant="outline" on:click={() => (showAddAccountDialog = true)}>
+				<Button variant="outline" on:click={handleAddAccountClick}>
 					<UserPlus class="w-4 h-4 mr-2" />
 					Add Account
 				</Button>
@@ -495,6 +529,28 @@
 					Save Securely
 				{/if}
 			</Button>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+
+<!-- Keychain Access Consent Dialog -->
+<AlertDialog.Root bind:open={showKeychainConsentDialog}>
+	<AlertDialog.Content class="max-w-sm">
+		<AlertDialog.Header>
+			<AlertDialog.Title class="flex items-center gap-2">
+				<Key class="w-5 h-5 text-primary" />
+				Keychain Access
+			</AlertDialog.Title>
+			<AlertDialog.Description class="text-left space-y-2">
+				<p>
+					AppleBlox needs to access your Roblox cookies stored in its own keychain entry. It will <strong>only</strong> access
+					credentials that AppleBlox itself created — not your passwords or other applications' data.
+				</p>
+				<p class="text-sm text-muted-foreground">macOS may ask you to confirm this access.</p>
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Action on:click={handleKeychainConsent}>Okay!</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

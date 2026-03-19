@@ -1,6 +1,6 @@
 import { events, filesystem, os } from '@neutralinojs/lib';
 import path from 'path-browserify';
-import { storeCredential, retrieveCredential, deleteCredential, hasCredential } from '../tools/keychain';
+import { storeCredential, retrieveCredential, deleteCredential, hasCredential, hasKeychainConsent } from '../tools/keychain';
 import { parseBinaryCookies, extractRoblosecurity, buildRoblosecurityFile } from '../tools/binarycookies';
 import { authenticatedRequest, getCsrfToken, validateArbitraryCookie, type UserInfo } from './api';
 import Logger from '@/windows/main/ts/utils/logger';
@@ -290,6 +290,8 @@ export async function migrateFromSingleAccount(): Promise<void> {
 		return; // Already migrated
 	}
 
+	if (!hasKeychainConsent()) return;
+
 	const hasOldCookie = await hasCredential(OLD_SINGLE_COOKIE_ACCOUNT);
 	if (!hasOldCookie) {
 		return; // Nothing to migrate
@@ -341,6 +343,7 @@ export async function migrateFromSingleAccount(): Promise<void> {
 }
 
 export async function getRobloxCookie(): Promise<string | null> {
+	if (!hasKeychainConsent()) return null;
 	const active = await getActiveAccount();
 	if (!active) return null;
 	return retrieveCredential(keychainAccountKey(active.userId));

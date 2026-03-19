@@ -56,7 +56,7 @@ const sidecarFiles: SidecarFile[] = [
 		filename: 'keychain.m',
 		type: 'objective-c',
 		args: [
-			'-framework', 'Security', '-framework', 'Foundation',
+			'-framework', 'Security', '-framework', 'Foundation', '-framework', 'AppKit',
 			'-sectcreate', '__TEXT', '__info_plist', 'scripts/build/sidecar/keychain_info.plist',
 		],
 		includeSuffix: true,

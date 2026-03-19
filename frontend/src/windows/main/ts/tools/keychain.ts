@@ -19,11 +19,14 @@ export async function storeCredential(account: string, credential: string, servi
 
 		const process = await spawn(keychainPath, ['store', service, account]);
 
-		await process.writeStdin(credential);
-		await process.endStdin();
+		// Register the exit listener BEFORE writing stdin to avoid a race
+		// where the process exits before we start listening
+		const exitPromise = new Promise<boolean>((resolve) => {
+			let resolved = false;
 
-		return new Promise((resolve) => {
 			process.on('exit', (exitCode) => {
+				if (resolved) return;
+				resolved = true;
 				if (exitCode === 0) {
 					logger.info(`Credential stored successfully for account: ${account}`);
 					resolve(true);
@@ -34,10 +37,17 @@ export async function storeCredential(account: string, credential: string, servi
 			});
 
 			setTimeout(() => {
+				if (resolved) return;
+				resolved = true;
 				logger.error('Keychain store operation timed out');
 				resolve(false);
 			}, 10000);
 		});
+
+		await process.writeStdin(credential);
+		await process.endStdin();
+
+		return exitPromise;
 	} catch (error) {
 		logger.error('Error storing credential:', error);
 		return false;
@@ -111,9 +121,21 @@ export async function hasCredential(account: string, service: string = SERVICE_N
 	}
 }
 
+let _keychainConsentGiven = false;
+
+export function hasKeychainConsent(): boolean {
+	return _keychainConsentGiven;
+}
+
+export function grantKeychainConsent(): void {
+	_keychainConsentGiven = true;
+}
+
 export default {
 	storeCredential,
 	retrieveCredential,
 	deleteCredential,
 	hasCredential,
+	hasKeychainConsent,
+	grantKeychainConsent,
 };
