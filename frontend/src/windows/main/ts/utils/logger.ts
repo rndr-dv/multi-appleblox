@@ -53,6 +53,28 @@ let isInitialized = false;
 let isNeutralinoReady = false;
 let pendingLogs: Array<{ timestamp: string; level: LogLevel; fileName: string; context: string; message: string }> = [];
 
+const SESSION_PID = Math.floor(Math.random() * 10000);
+
+export interface LogEntry {
+	timestamp: string;
+	level: LogLevel;
+	fileName: string;
+	context: string;
+	message: string;
+	formatted: string;
+}
+
+const LOG_BUFFER_SIZE = 500;
+const logBuffer: LogEntry[] = [];
+
+export function getLogBuffer(): readonly LogEntry[] {
+	return logBuffer;
+}
+
+export function getRecentErrors(count = 10): readonly LogEntry[] {
+	return logBuffer.filter((e) => e.level === 'ERROR').slice(-count);
+}
+
 class TypeUtils {
 	static isError(value: any): value is Error {
 		return (
@@ -360,7 +382,7 @@ class LogFormatter {
 		};
 
 		const processName = 'app';
-		const pid = Math.floor(Math.random() * 10000);
+		const pid = SESSION_PID;
 		const prefix = context ? `[${fileName}] [${context}]` : `[${fileName}]`;
 
 		// SECURITY: Final redaction pass to catch any edge cases
@@ -494,6 +516,13 @@ class Logger {
 		// Console output (synchronous)
 		const consoleMethod = level.toLowerCase() as 'info' | 'error' | 'warn' | 'debug' | 'trace';
 		console[consoleMethod](prefix, ...args);
+
+		const formatted = LogFormatter.formatLogLine(timestamp, level, fileName, context || '', formattedArgs);
+		const entry: LogEntry = { timestamp, level, fileName, context: context || '', message: formattedArgs, formatted };
+		logBuffer.push(entry);
+		if (logBuffer.length > LOG_BUFFER_SIZE) {
+			logBuffer.shift();
+		}
 
 		// File output (non-blocking)
 		setTimeout(() => {
