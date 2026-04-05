@@ -70,11 +70,15 @@ jobs:
             exit 1
           fi
 
-      - name: Verify PKG files exist
+      - name: Verify build artifacts exist
         run: |
           for arch in x64 universal arm64; do
             if [ ! -f "dist/AppleBlox-${arch}-${VERSION}.pkg" ]; then
               echo "Error: PKG file for ${arch} not found"
+              exit 1
+            fi
+            if [ ! -f "dist/AppleBlox-${VERSION}_${arch}.dmg" ]; then
+              echo "Error: DMG file for ${arch} not found"
               exit 1
             fi
           done
@@ -103,6 +107,30 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload DMG (mac_x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppleBlox-${{ env.VERSION }}_x64.dmg
+          path: dist/AppleBlox-${{ env.VERSION }}_x64.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload DMG (mac_universal)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppleBlox-${{ env.VERSION }}_universal.dmg
+          path: dist/AppleBlox-${{ env.VERSION }}_universal.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload DMG (mac_arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppleBlox-${{ env.VERSION }}_arm64.dmg
+          path: dist/AppleBlox-${{ env.VERSION }}_arm64.dmg
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Build Summary
         if: always()
         run: |
@@ -118,6 +146,11 @@ jobs:
           echo "- x64 PKG: $(ls -lh dist/AppleBlox-x64-${VERSION}.pkg 2>/dev/null || echo 'Not built')" >> $GITHUB_STEP_SUMMARY
           echo "- Universal PKG: $(ls -lh dist/AppleBlox-universal-${VERSION}.pkg 2>/dev/null || echo 'Not built')" >> $GITHUB_STEP_SUMMARY
           echo "- ARM64 PKG: $(ls -lh dist/AppleBlox-arm64-${VERSION}.pkg 2>/dev/null || echo 'Not built')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### DMG Wrappers (for 0.8.x updater compatibility)" >> $GITHUB_STEP_SUMMARY
+          echo "- x64 DMG: $(ls -lh dist/AppleBlox-${VERSION}_x64.dmg 2>/dev/null || echo 'Not built')" >> $GITHUB_STEP_SUMMARY
+          echo "- Universal DMG: $(ls -lh dist/AppleBlox-${VERSION}_universal.dmg 2>/dev/null || echo 'Not built')" >> $GITHUB_STEP_SUMMARY
+          echo "- ARM64 DMG: $(ls -lh dist/AppleBlox-${VERSION}_arm64.dmg 2>/dev/null || echo 'Not built')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### Icon Support" >> $GITHUB_STEP_SUMMARY
           echo "- macOS Version: ${{ steps.macos_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
@@ -163,6 +196,7 @@ jobs:
           draft: true
           files: |
             ./artifacts/AppleBlox-*/*.pkg
+            ./artifacts/AppleBlox-*/*.dmg
           generate_release_notes: true
           body_path: CHANGELOG.md
         env:
