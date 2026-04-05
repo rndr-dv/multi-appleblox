@@ -2,115 +2,159 @@
 
 ## What's New in 0.9.0
 
-AppleBlox 0.9.0 brings account management, visual customization, game tracking, and hundreds of fixes and improvements.
+AppleBlox 0.9.0 is a massive update spanning 200+ commits. It brings multi-account management, a redesigned home page, game history tracking, Bloxstrap theme support, a new installer format, and hundreds of fixes and improvements across the entire app.
 
 ---
 
-## 🎯 Major Features
+## New Features
 
 ### Multi-Account System
+- Add and manage multiple Roblox accounts within AppleBlox
+- Three ways to log in: auto-detect from the Roblox app, browser login, or manual cookie entry
+- One-click account switching with automatic login handling
+- Accounts are validated on startup — expired or invalid sessions are clearly indicated
+- Credentials are stored securely in the macOS Keychain with a consent prompt before first access
 
-* You can now add and manage multiple Roblox accounts directly within AppleBlox.
-* The app supports auto-detection from the Roblox app, Browser login, or manual cookie entry.
-* Switching between accounts takes one click, and AppleBlox handles the login process automatically.
-* The interface shows which accounts are active or expired and validates them on startup to ensure they're ready to use.
-
-### Redesigned Home Page (Quickplay)
-
-* The Home page has been redesigned to display your recently played games and complete game history in one place.
-* You can launch games directly from the home page without needing to search through Roblox.
+### Quickplay Home Page
+- The Home page has been redesigned to show your recently played games and full game history
+- Launch games directly from the home page without going through Roblox
+- Rejoin your last server instantly using the sidebar Rejoin button — useful after disconnects
 
 ### Game History Tracking
+- Every game session is automatically logged with play time, duration, and server region
+- Full history view with session details
+- Tracking can be toggled on or off in Integrations settings
 
-* Every game you play is now automatically logged with detailed information including play time, session duration, and server region.
-* You can toggle tracking on or off in settings for privacy control.
-* The Rejoin button in the sidebar lets you reconnect to your last server instantly, which is useful if you get disconnected or want to continue where you left off.
-
-### Icon Customization
-
-* AppleBlox now supports custom app icons through `.icns` file uploads.
-* Bundled icon packs are included for quick customization, and switching between them takes just one click.
-* This lets you personalize AppleBlox's appearance on your Mac to match your style.
+### Bloxstrap Bootstrapper Theme Support
+- Import and use Bloxstrap XAML themes for the bootstrapper window
+- Themes render with full element hierarchy, scaling, and color support
 
 ### Custom Icon Colors
-
-* You can change the colors of Roblox's in-game UI icons using a color picker with hue, saturation, and value controls.
-* The system automatically backs up original icons before applying changes, so you can experiment without risk.
-* This works alongside other mods without conflicts.
+- Change the colors of Roblox's in-game UI icons using a color picker
+- Original icons are backed up automatically before changes are applied
+- Works alongside other mods without conflicts
 
 ### Redesigned Mods Manager
-
-* The mods interface has been overhauled to show stacked preview images of the files each mod changes.
-* You can see mod size and file count statistics at a glance, making it easier to understand what each mod does before installing.
+- The mods interface now shows stacked preview images of files each mod changes
+- Mod size and file count statistics are visible at a glance
+- Improved download experience for remote mods
 
 ### Roblox Installation Manager
-
-* Roblox can now be downloaded directly from AppleBlox with real-time progress tracking showing speed and estimated time.
-* The app automatically detects if Roblox is missing and prompts you to install it.
-* Updates can run in the background so you're not interrupted, and you can configure custom installation paths if needed.
+- Download Roblox directly from AppleBlox with real-time progress (speed + ETA)
+- Automatic detection when Roblox is missing, with a prompt to install
+- Background updates so you're not interrupted
+- Custom installation path support
+- CMD+R keyboard shortcut to open the install dialog from anywhere
 
 ### Enhanced Region Selection
+- Region selection integrates with your active Roblox account
+- Server lookup through RoValra's datacenter database
+- Optional notifications showing which region you connected to
 
-* Region selection now integrates with your active Roblox account for more reliable server control.
-* Using RoValra's database, you can get better control over which servers you connect to through the app.
-* You can enable optional notifications to see which region you connected to when joining games.
+### Render Resolution Setting
+- New option to control Roblox's render resolution independently from display resolution
+
+### FastFlags Allowlist
+- Roblox now enforces a flag allowlist — AppleBlox validates flags against it
+- Flags not in the allowlist are clearly marked as blocked and will have no effect
+- Invalid presets and deprecated flags have been removed
+
+### Structured Debug Reports
+- Debug bundle export now includes a machine-readable `summary.txt` with system info, active settings, and recent errors
+- Copy debug report to clipboard directly from the Misc page
+- Documentation button added to the Misc page for quick access to docs.appleblox.com
 
 ---
 
-## ✨ Key Improvements
+## Improvements
+
+### Installation & Distribution
+- Switched from DMG to PKG installer for a smoother installation experience
+- Sidecar binaries are now built per-architecture (arm64/x64) for smaller downloads
+- macOS Liquid Glass icon support (macOS 26+) with pre-compiled fallback
 
 ### User Interface
-
-* The sidebar now includes dedicated Home and Account icons for easier navigation.
-* Settings panels have been modernized with cleaner card designs and better organization.
-* The onboarding flow has been improved to guide new users through setup more clearly.
-* Alignment issues throughout the app have been fixed for a more polished appearance.
-
-### Engine Settings
-
-* The FastFlags section has been renamed to "Engine" to better describe what these settings control.
-* A bulk enable/disable switch lets you toggle multiple flags at once.
-* The FPS target slider has been re-added for precise frame rate control.
-* Outdated presets that no longer work have been removed, and safety warnings have been added for settings that might cause issues.
+- New settings panel design with cleaner card layouts
+- Sidebar now includes Home and Account navigation icons
+- Improved onboarding flow with dynamic page generation
+- Fixed alignment issues, pixel gaps, and hover transparency throughout the app
+- Bulk enable/disable switch for FastFlags
+- FPS target slider re-added for precise frame rate control
+- "Engine" tab replaces the old "FastFlags" name
 
 ### Performance & Stability
-
-* Roblox updates now happen in the background without interrupting your workflow.
-* Launching from roblox:// deeplinks is faster.
-* The logging system has been rewritten to be more organized and useful.
-* The issue where macOS incorrectly detected AppleBlox as crashing on quit has been fixed, and voice chat should now work for everyone.
+- Logging system completely rewritten with structured log buffer, file-level context, and automatic credential redaction
+- Fixed macOS incorrectly flagging AppleBlox as having crashed on quit
+- Deeplink launching is faster
+- Transparent viewer no longer hangs when closing the app
+- WebView browser login freeze on newer macOS versions fixed
+- Keychain sidecar race condition fixed (stdin write before exit listener)
+- NeutralinoJS upgraded to 6.2.0
+- Discord-RPC-cli bumped to 1.0.2 with `--update` flag support
 
 ### Quality of Life
-
-* You can now press CMD+R to open the Roblox installer from anywhere in the app.
-* If you need support, you can now export your settings configuration by pressing CMD+P.
-
----
-
-## 🐛 Notable Bug Fixes
-
-* The macOS crash-on-quit detection issue has been resolved.
-* Double-launching when using deeplinks no longer occurs.
-* The transparency viewer no longer hangs when closing the app.
-* FPS uncapping now works correctly.
-* Custom fonts and mods no longer persist after you remove them.
-* The Quality Distance toggle now applies properly.
-* Roblox path detection works across different macOS configurations.
-* Discord RPC no longer shows escaped characters in game names and no longer gets rate-limited when changing too quickly.
-* Button alignment and pixel gaps have been fixed.
-* Icon colors display correctly on macOS 11.
+- CMD+R to open Roblox installer, CMD+P to export settings
+- Full app reset option with two-step confirmation (deletes keychain, settings, mods, cache)
+- Alternative notification system via AppleScript for users where standard notifications don't work
+- Data directories are created automatically on startup and after reset
 
 ---
 
-## 🗑️ Removals
+## Bug Fixes
 
-* Lightning Presets have been removed since Roblox has removed the fastflags for them.
+- Fix macOS crash-on-quit false detection
+- Fix double-launching when using deeplinks from the app
+- Fix transparency viewer hanging after closing AppleBlox
+- Fix FPS uncapping not working correctly
+- Fix mods and custom fonts persisting after removal
+- Fix Quality Distance toggle not applying
+- Fix Roblox path detection across different macOS configurations
+- Fix Discord RPC showing escaped characters in game names
+- Fix notification spam from game events
+- Fix WebView browser login freeze on newer macOS
+- Fix launch error related to mesh files in mods
+- Fix critical NeutralinoJS bug with hidden windows
+- Fix critical bug in FastFlags profiles select
+- Fix toggle state check for settings widgets
+- Fix icon colors on macOS 11
+- Fix voice chat issues
+- Fix sidebar hover transparency
 
 ---
 
-# Word of Thanks
+## Removals
 
-Yes, this update has taken a significant amount of time, and I'm sorry for that. I have been quite busy with IRL work, so I haven't been able to work on AppleBlox as much as I would have liked. ❤️
-Thank you for your patience — I hope you enjoy this update (as I think it's AppleBlox's best one so far)!
+- Lightning presets removed (Roblox removed the underlying FastFlags)
+- Workshop mod browser temporarily removed
+- `.mesh` file support in mods removed (caused launch errors)
+- Deprecated `getMostRecentRoblox()` function removed
+- `isUrlReachable` utility removed
+
+---
+
+## For Developers
+
+### Testing
+- 199 unit tests across 7 test files covering paths, shell utilities, logger, settings, FastFlags allowlist, and binary cookies parser
+- Test data isolation via `APPLEBLOX_DATA_DIR` env var
+- E2E tests with Playwright against Vite dev server
+
+### Build System
+- Parallel build support for multiple architectures
+- Per-architecture sidecar compilation
+- PKG creation pipeline replaces DMG
+- GitHub Actions updated to macOS 14+ with workflow_dispatch trigger
+
+### Internal
+- Structured `LogEntry` type with buffer, `getRecentErrors()`, and formatted output
+- `DebugReport` interface with `collectDebugReport()` and `formatDebugReportAsText()`
+- Keychain consent gate (`hasKeychainConsent` / `grantKeychainConsent`)
+- Async `getAllowFixedDelays()` replaces module-level initialization
+- CURL utility for CORS-free requests
+- Concurrency-safe settings with caching
+- Binary cookies parser for Roblox cookie extraction
+
+---
 
 For issues: [https://github.com/AppleBlox/AppleBlox/issues](https://github.com/AppleBlox/AppleBlox/issues)
+Documentation: [https://docs.appleblox.com](https://docs.appleblox.com)
