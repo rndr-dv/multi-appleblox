@@ -20,6 +20,14 @@ type CompilableFile = BaseFile & {
 	args: string[];
 };
 
+type RepoFile = {
+	name: string;
+	url: string;
+	outputName: string;
+	buildOutput: string;  // path to the built binary within the cloned repo
+	includeSuffix?: boolean;
+};
+
 type CopyFile = BaseFile & {
 	type: 'copy';
 };
@@ -113,6 +121,15 @@ const downloadFiles: DownloadFile[] = [
 			type: 'tar',
 			file: 'alerter',
 		},
+	},
+];
+
+const repoFiles: RepoFile[] = [
+	{
+		name: 'Virtual Display',
+		url: 'https://github.com/AppleBlox/virtualdisplay.git',
+		outputName: 'virtualdisplay_ablox',
+		buildOutput: '.build/virtualdisplay',
 	},
 ];
 
@@ -323,6 +340,57 @@ async function downloadFile(
 }
 
 /**
+ * Clone a git repo, build it with `make`, and copy the resulting binary to outputDir.
+ * For universal builds, compiles for both arm64 and x86_64 then merges with lipo.
+ */
+async function buildRepo(
+	file: RepoFile,
+	logger: Signale,
+	arch: BuildArch,
+	outputDir: string
+): Promise<{ name: string; time: number; output: string }> {
+	const perf = performance.now();
+	const outPath = resolve(join(outputDir, file.outputName));
+	const repoDir = resolve(join('bin/.repos', file.outputName));
+
+	await $`rm -rf ${repoDir}`;
+	await $`git clone --depth=1 ${file.url} ${repoDir}`;
+
+	const makeArchs: Record<BuildArch, string[]> = {
+		arm64: ['arm64'],
+		x64: ['x86_64'],
+		universal: ['arm64', 'x86_64'],
+	};
+
+	const archs = makeArchs[arch];
+
+	if (archs.length === 1) {
+		await $`make -C ${repoDir} ARCH=${archs[0]}`;
+		await $`cp ${join(repoDir, file.buildOutput)} ${outPath}`;
+	} else {
+		// Universal: build each arch separately, merge with lipo
+		const tempOutputs: string[] = [];
+		for (const a of archs) {
+			await $`make -C ${repoDir} clean`;
+			await $`make -C ${repoDir} ARCH=${a}`;
+			const tempOut = `${outPath}.${a}`;
+			await $`cp ${join(repoDir, file.buildOutput)} ${tempOut}`;
+			tempOutputs.push(tempOut);
+		}
+		await Bun.spawn(['lipo', '-create', ...tempOutputs, '-output', outPath]).exited;
+		for (const temp of tempOutputs) {
+			await $`rm -f ${temp}`;
+		}
+	}
+
+	chmodSync(outPath, 0o755);
+	await Bun.spawn(['codesign', '--sign', '-', '--force', outPath]).exited;
+
+	const time = (performance.now() - perf) / 1000;
+	return { name: file.name, time, output: file.outputName };
+}
+
+/**
  * Build sidecar binaries for a specific architecture.
  * @param arch - Target architecture (x64, arm64, or universal). Defaults to universal.
  * @param outputDir - Output directory path. Defaults to 'bin'.
@@ -341,14 +409,15 @@ export async function buildSidecar(arch: BuildArch = 'universal', outputDir?: st
 	const compileFiles = sidecarFiles.filter((f) => f.type !== 'copy') as CompilableFile[];
 	const scriptFiles = sidecarFiles.filter((f) => f.type === 'copy') as CopyFile[];
 
-	logger.info(`Building ${sidecarFiles.length} sidecar binaries + ${downloadFiles.length} downloads (${arch})`);
+	logger.info(`Building ${sidecarFiles.length} sidecar binaries + ${downloadFiles.length} downloads + ${repoFiles.length} repos (${arch})`);
 
 	try {
 		// Process all files in parallel
-		const [compileResults, copyResults, downloadResults] = await Promise.all([
+		const [compileResults, copyResults, downloadResults, repoResults] = await Promise.all([
 			Promise.all(compileFiles.map((f) => compileFile(f, logger, compileArgs, binDir))),
 			Promise.all(scriptFiles.map((f) => copyFile(f, logger, binDir))),
 			Promise.all(downloadFiles.map((f) => downloadFile(f, logger, binDir))),
+			Promise.all(repoFiles.map((f) => buildRepo(f, logger, arch, binDir))),
 		]);
 
 		// Display summary
@@ -371,13 +440,17 @@ export async function buildSidecar(arch: BuildArch = 'universal', outputDir?: st
 			logger.info(`Skipped ${skipped.length} existing file(s): ${skipped.map((r) => r.output).join(', ')}`);
 		}
 
+		if (repoResults.length > 0) {
+			logger.success(`Built ${repoResults.length} repo(s): ${repoResults.map((r) => r.output).join(', ')}`);
+		}
+
 		const totalTime = ((performance.now() - startTime) / 1000).toFixed(3);
 		logger.complete(`All sidecar binaries ready [${arch}] (${totalTime}s)`);
 	} catch (error) {
 		logger.fatal('Failed to build sidecar binaries');
 		throw error;
 	} finally {
-		await $`rm -rf bin/.temp`;
+		await $`rm -rf bin/.temp bin/.repos`;
 	}
 }
 

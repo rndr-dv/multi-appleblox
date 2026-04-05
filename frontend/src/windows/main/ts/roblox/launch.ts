@@ -45,6 +45,7 @@ async function getAllowFixedDelays(): Promise<boolean> {
 
 let rbxInstance: RobloxInstance | null = null;
 let bootstrapperProcess: SpawnEventEmitter | null = null;
+let virtualdisplayProcess: SpawnEventEmitter | null = null;
 let initialProgressListener: ((evt: { detail: string }) => Promise<void>) | null = null;
 
 interface LaunchSettings {
@@ -467,6 +468,15 @@ async function applyModsAndLaunch(settings: LaunchSettings, robloxUrl?: string):
 	await updateBootstrapper('bootstrapper:progress', { progress: 100 });
 	if (await getAllowFixedDelays()) await sleep(FIXED_STEP_DELAY);
 
+	if ((await getValue<boolean>('engine.graphics.fps_cap')) === true) {
+		const vdPath = libraryPath('virtualdisplay');
+		logger.info('FPS cap enabled: starting virtual display');
+		virtualdisplayProcess = await spawn(vdPath, ['--no-menu'], { skipStderrCheck: true });
+		virtualdisplayProcess.on('exit', () => {
+			virtualdisplayProcess = null;
+		});
+	}
+
 	await cleanupBootstrapper();
 	await robloxInstance.start(robloxUrl);
 
@@ -488,6 +498,11 @@ async function setupRobloxInstance(
 	robloxInstance.on('gameEvent', onGameEvent);
 	robloxInstance.on('exit', async () => {
 		logger.info('Roblox instance exited');
+
+		if (virtualdisplayProcess) {
+			await virtualdisplayProcess.kill(true);
+			virtualdisplayProcess = null;
+		}
 
 		if (settings.returnToWebsite) {
 			os.open('https://www.roblox.com');

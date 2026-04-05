@@ -55,10 +55,7 @@ async function buildFlagsList(): Promise<FastFlagsList> {
 			path: 'engine.graphics.engine',
 			type: 'select',
 			value: async (settingValue) => {
-				return (
-					(settingValue as { label: string; value: string }).value === 'opengl' ||
-					(await getValue<boolean>('engine.graphics.fps_cap')) === true
-				);
+				return (settingValue as { label: string; value: string }).value === 'opengl';
 			},
 		})
 		.addFlag({
@@ -67,10 +64,7 @@ async function buildFlagsList(): Promise<FastFlagsList> {
 			path: 'engine.graphics.engine',
 			type: 'select',
 			value: async (settingValue) => {
-				return (
-					(settingValue as { label: string; value: string }).value === 'metal' &&
-					!((await getValue<boolean>('engine.graphics.fps_cap')) === true)
-				);
+				return (settingValue as { label: string; value: string }).value === 'metal';
 			},
 		})
 		.addFlag({
@@ -79,10 +73,7 @@ async function buildFlagsList(): Promise<FastFlagsList> {
 			path: 'engine.graphics.engine',
 			type: 'select',
 			value: async (settingValue) => {
-				return (
-					(settingValue as { label: string; value: string }).value === 'vulkan' &&
-					!((await getValue<boolean>('engine.graphics.fps_cap')) === true)
-				);
+				return (settingValue as { label: string; value: string }).value === 'vulkan';
 			},
 		})
 		.addFlag({

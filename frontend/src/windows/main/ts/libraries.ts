@@ -54,6 +54,12 @@ const LibPaths: LibPathsType = {
 			dev: '/bin/roblox_login_ablox',
 		},
 	},
+	virtualdisplay: {
+		darwin: {
+			prod: '/lib/virtualdisplay_ablox',
+			dev: '/bin/virtualdisplay_ablox',
+		},
+	},
 };
 
 export function libraryPath<T extends keyof LibPathsType>(libName: T): string {

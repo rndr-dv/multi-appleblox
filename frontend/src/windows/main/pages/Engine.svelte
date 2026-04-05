@@ -16,21 +16,28 @@
 				.setName('Graphics Engine')
 				.setDescription('Core graphics and performance settings')
 				.setId('graphics')
-				.addSelect({
-					label: 'Render Resolution',
-					description: 'Override the internal rendering resolution. Higher values produce sharper images but require more GPU power.',
-					id: 'resolution',
-					default: 'default',
-					items: [
-						{ label: 'Default', value: 'default' },
-						{ label: '8K (4320p)', value: '33178' },
-						{ label: '4K (2160p)', value: '8294' },
-						{ label: '1440p', value: '3686' },
-						{ label: '1080p', value: '2074' },
-						{ label: '720p', value: '922' },
-						{ label: '480p', value: '410' },
-					],
+				.addSwitch({
+					label: 'Remove Frame Rate Limit',
+					description:
+						'Create a 240hz virtual display that will let you go above your monitor\'s refresh rate in game.',
+					id: 'fps_cap',
+					default: false,
 				})
+				// .addSelect({
+				// 	label: 'Render Resolution',
+				// 	description: 'Override the internal rendering resolution. Higher values produce sharper images but require more GPU power.',
+				// 	id: 'resolution',
+				// 	default: 'default',
+				// 	items: [
+				// 		{ label: 'Default', value: 'default' },
+				// 		{ label: '8K (4320p)', value: '33178' },
+				// 		{ label: '4K (2160p)', value: '8294' },
+				// 		{ label: '1440p', value: '3686' },
+				// 		{ label: '1080p', value: '2074' },
+				// 		{ label: '720p', value: '922' },
+				// 		{ label: '480p', value: '410' },
+				// 	],
+				// })
 				.addSelect({
 					label: 'Graphics API',
 					description: 'Select rendering backend',
@@ -42,18 +49,6 @@
 						{ label: 'Vulkan', value: 'vulkan' },
 						{ label: 'OpenGL', value: 'opengl' },
 					],
-					toggleable: {
-						id: 'fps_cap',
-						type: 'switch',
-						value: false,
-					},
-				})
-				.addSwitch({
-					label: 'Remove Frame Rate Limit',
-					description:
-						'Removes the limit of 60 frames per second imposed by MacOS (You will have to use the built-in FPS changer in Roblox in addition of this option). <br><span style="color: hsl(var(--warning));">This option is unstable as it requires the old and unspported OpenGL graphics API. You will probably get worse performance than when using Metal.</span>',
-					id: 'fps_cap',
-					default: false,
 				})
 				.addSwitch({
 					label: 'Separate Quality & Distance',
