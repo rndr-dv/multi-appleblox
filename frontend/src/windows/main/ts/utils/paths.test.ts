@@ -46,16 +46,16 @@ describe('Path Utilities', () => {
 	describe('getDataDir', () => {
 		it('should return default data directory when no override is set', async () => {
 			const dataDir = await getDataDir();
-			expect(dataDir).toBe('/Users/test/Library/Application Support/AppleBlox');
+			expect(dataDir).toBe('/Users/test/Library/Application Support/MultaBlox');
 		});
 
 		it('should return test directory when setTestDataDirectory is called', async () => {
-			setTestDataDirectory('/tmp/test-appleblox');
+			setTestDataDirectory('/tmp/test-multablox');
 			const dataDir = await getDataDir();
-			expect(dataDir).toBe('/tmp/test-appleblox');
+			expect(dataDir).toBe('/tmp/test-multablox');
 		});
 
-		it('should respect APPLEBLOX_DATA_DIR environment variable', async () => {
+		it('should respect MULTABLOX_DATA_DIR environment variable', async () => {
 			// This would need to be tested via integration test
 			// as the env var is checked during initializeDataDirectory
 		});
@@ -64,65 +64,65 @@ describe('Path Utilities', () => {
 	describe('getModsDir', () => {
 		it('should return mods directory under data dir', async () => {
 			const modsDir = await getModsDir();
-			expect(modsDir).toBe('/Users/test/Library/Application Support/AppleBlox/mods');
+			expect(modsDir).toBe('/Users/test/Library/Application Support/MultaBlox/mods');
 		});
 
 		it('should use test data directory when set', async () => {
-			setTestDataDirectory('/tmp/test-appleblox');
+			setTestDataDirectory('/tmp/test-multablox');
 			const modsDir = await getModsDir();
-			expect(modsDir).toBe('/tmp/test-appleblox/mods');
+			expect(modsDir).toBe('/tmp/test-multablox/mods');
 		});
 	});
 
 	describe('getCacheDir', () => {
 		it('should return cache directory under data dir', async () => {
 			const cacheDir = await getCacheDir();
-			expect(cacheDir).toBe('/Users/test/Library/Application Support/AppleBlox/cache');
+			expect(cacheDir).toBe('/Users/test/Library/Application Support/MultaBlox/cache');
 		});
 
 		it('should use test data directory when set', async () => {
-			setTestDataDirectory('/tmp/test-appleblox');
+			setTestDataDirectory('/tmp/test-multablox');
 			const cacheDir = await getCacheDir();
-			expect(cacheDir).toBe('/tmp/test-appleblox/cache');
+			expect(cacheDir).toBe('/tmp/test-multablox/cache');
 		});
 	});
 
 	describe('getModsCacheDir', () => {
 		it('should return mods cache directory', async () => {
 			const modsCacheDir = await getModsCacheDir();
-			expect(modsCacheDir).toBe('/Users/test/Library/Application Support/AppleBlox/cache/mods');
+			expect(modsCacheDir).toBe('/Users/test/Library/Application Support/MultaBlox/cache/mods');
 		});
 
 		it('should use test data directory when set', async () => {
-			setTestDataDirectory('/tmp/test-appleblox');
+			setTestDataDirectory('/tmp/test-multablox');
 			const modsCacheDir = await getModsCacheDir();
-			expect(modsCacheDir).toBe('/tmp/test-appleblox/cache/mods');
+			expect(modsCacheDir).toBe('/tmp/test-multablox/cache/mods');
 		});
 	});
 
 	describe('getFontsCacheDir', () => {
 		it('should return fonts cache directory', async () => {
 			const fontsCacheDir = await getFontsCacheDir();
-			expect(fontsCacheDir).toBe('/Users/test/Library/Application Support/AppleBlox/cache/fonts');
+			expect(fontsCacheDir).toBe('/Users/test/Library/Application Support/MultaBlox/cache/fonts');
 		});
 
 		it('should use test data directory when set', async () => {
-			setTestDataDirectory('/tmp/test-appleblox');
+			setTestDataDirectory('/tmp/test-multablox');
 			const fontsCacheDir = await getFontsCacheDir();
-			expect(fontsCacheDir).toBe('/tmp/test-appleblox/cache/fonts');
+			expect(fontsCacheDir).toBe('/tmp/test-multablox/cache/fonts');
 		});
 	});
 
 	describe('getConfigDir', () => {
 		it('should return config directory (same as data dir)', async () => {
 			const configDir = await getConfigDir();
-			expect(configDir).toBe('/Users/test/Library/Application Support/AppleBlox');
+			expect(configDir).toBe('/Users/test/Library/Application Support/MultaBlox');
 		});
 
 		it('should use test data directory when set', async () => {
-			setTestDataDirectory('/tmp/test-appleblox');
+			setTestDataDirectory('/tmp/test-multablox');
 			const configDir = await getConfigDir();
-			expect(configDir).toBe('/tmp/test-appleblox');
+			expect(configDir).toBe('/tmp/test-multablox');
 		});
 	});
 
@@ -130,7 +130,7 @@ describe('Path Utilities', () => {
 		it('should set and clear test directory override', async () => {
 			// Initially uses default
 			const defaultDir = await getDataDir();
-			expect(defaultDir).toBe('/Users/test/Library/Application Support/AppleBlox');
+			expect(defaultDir).toBe('/Users/test/Library/Application Support/MultaBlox');
 
 			// Set test directory
 			setTestDataDirectory('/tmp/test');
@@ -140,7 +140,7 @@ describe('Path Utilities', () => {
 			// Clear test directory
 			clearTestDataDirectory();
 			const clearedDir = await getDataDir();
-			expect(clearedDir).toBe('/Users/test/Library/Application Support/AppleBlox');
+			expect(clearedDir).toBe('/Users/test/Library/Application Support/MultaBlox');
 		});
 	});
 });

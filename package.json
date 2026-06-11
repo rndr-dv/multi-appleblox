@@ -1,7 +1,7 @@
 {
-	"name": "appleblox",
+	"name": "multablox",
 	"version": "0.9.0",
-	"description": "Lightweight and fast Roblox launcher for MacOS",
+	"description": "Private multi-account Roblox launcher for macOS",
 	"scripts": {
 		"vite:dev": "vite",
 		"dev": "bun run scripts/package/dev.ts",
@@ -25,6 +25,7 @@
 		"test:unit": "bun test",
 		"test:watch": "bun test --watch",
 		"test:coverage": "bun test --coverage",
+		"test:instance-probe": "scripts/feasibility/instance-probe-smoke.sh",
 		"format": "prettier --write ./",
 		"neu:empty": ""
 	},

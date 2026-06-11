@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>AppleBlox</string>
+	<string>MultaBlox Roblox Login</string>
 	<key>CFBundleName</key>
-	<string>AppleBlox</string>
+	<string>MultaBlox Roblox Login</string>
 	<key>NSApplicationName</key>
-	<string>AppleBlox</string>
+	<string>MultaBlox Roblox Login</string>
 	<key>CFBundleIdentifier</key>
-	<string>ch.origaming.appleblox.login</string>
+	<string>com.lucas.multablox.login</string>
 	<key>CFBundleIconFile</key>
 	<string>icon</string>
 	<key>CFBundleVersion</key>

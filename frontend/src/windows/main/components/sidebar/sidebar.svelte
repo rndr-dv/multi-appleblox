@@ -13,6 +13,7 @@
 	import RobloxIcon from '@/assets/sidebar/roblox.png';
 	import HomeIcon from '@/assets/sidebar/home.png';
 	import AccountIcon from '@/assets/sidebar/account.png';
+	import InstancesIcon from '@/assets/sidebar/instances.svg';
 
 	import CreditsIcon from '@/assets/sidebar/info.png';
 	import MiscIcon from '@/assets/sidebar/misc.png';
@@ -84,6 +85,7 @@
 	}
 
 	const sidebarBtns: { label: string; id: string; icon: string }[] = [
+		{ label: 'Instances', id: 'instances', icon: InstancesIcon },
 		{ label: 'Quickplay', id: 'home', icon: HomeIcon },
 		{ label: 'Account', id: 'account', icon: AccountIcon },
 		{ label: 'Integrations', id: 'integrations', icon: IntegrationsIcon },

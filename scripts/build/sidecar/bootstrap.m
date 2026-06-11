@@ -75,7 +75,7 @@
 - (void)showUnsupportedVersionDialog {
     NSAlert *alert = [[NSAlert alloc] init];
     alert.messageText = @"Unsupported MacOS Version";
-    alert.informativeText = @"AppleBlox has been reported broken on older versions of MacOS (<11). If you encounter a white window, please do not report this issue. You can try running AppleBlox in your default browser as a temporary fix.";
+    alert.informativeText = @"MultaBlox has been reported broken on older versions of macOS (<11). If you encounter a white window, try running MultaBlox in your default browser.";
     
     NSButton *browserButton = [alert addButtonWithTitle:@"Open in default browser"];
     NSButton *openButton = [alert addButtonWithTitle:@"Open Anyway"];

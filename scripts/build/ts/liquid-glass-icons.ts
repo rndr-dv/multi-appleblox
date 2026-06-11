@@ -1,3 +1,4 @@
+import BuildConfig from '@root/build.config';
 import { $ } from 'bun';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
@@ -46,7 +47,7 @@ async function compileAssetCatalog(iconBundlePath: string, outputDir: string): P
  */
 export async function buildLiquidGlassIcons(appDist: string, logger: Signale): Promise<boolean> {
 	const fs = await import('fs/promises');
-	const resourcesPath = resolve(appDist, 'AppleBlox.app/Contents/Resources');
+	const resourcesPath = resolve(appDist, `${BuildConfig.appName}.app/Contents/Resources`);
 	const assetsCar = resolve(resourcesPath, 'Assets.car');
 	const iconBundlePath = resolve('scripts/build/assets/liquid-glass/AppIcon.icon');
 	const precompiledPath = resolve('scripts/build/assets/liquid-glass/Assets.car');

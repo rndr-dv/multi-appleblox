@@ -5,9 +5,9 @@ set -euo pipefail
 CHANNEL="LIVE"
 CLIENT_SETTINGS_URL="https://clientsettings.roblox.com/v2/client-version/MacPlayer/channel/${CHANNEL}"
 DOWNLOAD_HOST="https://setup-aws.rbxcdn.com"
-TEMP_DIR="/tmp/ablox_roblox_update_$$"
-LOG_FILE="/tmp/ablox_roblox_updater.log"
-BUNDLE_ID="ch.origaming.appleblox"
+TEMP_DIR="/tmp/multablox_roblox_update_$$"
+LOG_FILE="/tmp/multablox_roblox_updater.log"
+BUNDLE_ID="com.lucas.multablox"
 ROBLOX_PROCESS_NAME="RobloxPlayer"
 MAX_WAIT_TIME=900
 
@@ -35,8 +35,8 @@ send_notification() {
     local app_path
     app_path=$(mdfind "kMDItemCFBundleIdentifier == '$BUNDLE_ID'" | head -1)
     
-    if [ -n "$app_path" ] && [ -f "$app_path/Contents/Resources/lib/alerter_ablox" ]; then
-        "$app_path/Contents/Resources/lib/alerter_ablox" -message "$message" -title "$title" -sender "$BUNDLE_ID" -sound "default" &>/dev/null || true
+    if [ -n "$app_path" ] && [ -f "$app_path/Contents/Resources/lib/alerter_multablox" ]; then
+        "$app_path/Contents/Resources/lib/alerter_multablox" -message "$message" -title "$title" -sender "$BUNDLE_ID" -sound "default" &>/dev/null || true
     fi
 }
 

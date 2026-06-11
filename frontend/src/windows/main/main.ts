@@ -18,8 +18,10 @@ import { ensureDataDirs, initializeDataDirectory } from './ts/utils/paths';
 import { migrateFromSingleAccount } from './ts/roblox/accounts';
 import { focusWindow, setWindowVisibility } from './ts/window';
 import { extractBundledIcons } from './ts/utils/bundled-icons';
+import ProductConfig from '@root/product.config';
+import { getExistingInstanceRuntime } from './ts/multi-instance/runtime';
 
-const COMMAND_FILE = '/tmp/appleblox-bootstrap-command';
+const COMMAND_FILE = '/tmp/multablox-bootstrap-command';
 let lastCommandTimestamp = 0;
 
 async function handleBootstrapCommand(command: string) {
@@ -90,15 +92,22 @@ async function quit() {
 	Logger.info('Exiting app');
 
 	try {
+		const runtime = await getExistingInstanceRuntime();
+		await runtime?.manager.shutdown({ timeoutMs: 3000 });
+	} catch (e) {
+		Logger.warn('Error closing managed Roblox instances:', e);
+	}
+
+	try {
 		await RPCController.stop();
 	} catch (e) {
 		Logger.warn('Error stopping RPC controller:', e);
 	}
 
 	try {
-		await shell('pkill', ['-f', '_ablox'], { skipStderrCheck: true });
+		await shell('pkill', ['-f', '_multablox'], { skipStderrCheck: true });
 	} catch (e) {
-		Logger.warn('Failed to pkill _ablox on quit:', e);
+		Logger.warn('Failed to pkill _multablox on quit:', e);
 	}
 
 	if (window.NL_ARGS.includes('--mode=browser')) {
@@ -113,7 +122,7 @@ async function quit() {
 	if (getMode() === 'dev') {
 		await neuApp.exit(0);
 	} else {
-		shell(`osascript -e 'tell application id "ch.origaming.appleblox" to quit'`, [], { completeCommand: true });
+		shell(`osascript -e 'tell application id "${ProductConfig.bundleId}" to quit'`, [], { completeCommand: true });
 	}
 }
 
@@ -151,7 +160,7 @@ events.on('ready', async () => {
 		let deeplinkLogger = Logger.withContext('deeplink');
 		try {
 			Logger.info(`Deeplink: Initiating Roblox launch with URL: ${url}`);
-			if (url === 'appleblox://launch') {
+			if (url === `${ProductConfig.urlScheme}://launch`) {
 				url = 'roblox-player:';
 			}
 			setTimeout(async () => {

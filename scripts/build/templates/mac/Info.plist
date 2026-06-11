@@ -40,13 +40,13 @@
                 <string>{APP_URL_SCHEME_NAME}</string>
                 <key>CFBundleURLSchemes</key>
                 <array>
-                    <string>appleblox</string>
+                    <string>{APP_URL_SCHEME}</string>
                 </array>
             </dict>
         </array>
         <key>LSUIElement</key>
         <true />
         <key>NSAccessibilityUsageDescription</key>
-        <string>AppleBlox requires Accessibility permissions to move and resize Roblox's window.</string>
+        <string>MultaBlox requires Accessibility access to inspect Roblox windows and test targeted input delivery.</string>
     </dict>
 </plist>

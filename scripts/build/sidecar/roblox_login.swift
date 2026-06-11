@@ -4,7 +4,7 @@ import Security
 
 // MARK: - Keychain Helper
 
-let keychainService = "ch.origaming.appleblox"
+let keychainService = "com.lucas.multablox"
 let keychainAccount = "roblox-cookie"
 
 func secureZeroMemory(_ data: inout Data) {
@@ -48,7 +48,7 @@ func storeInKeychain(_ cookie: String) -> Bool {
 
 class ProcessMonitor {
     private var parentPID: pid_t
-    private var monitorQueue = DispatchQueue(label: "ch.origaming.appleblox.processmonitor", qos: .utility)
+    private var monitorQueue = DispatchQueue(label: "com.lucas.multablox.processmonitor", qos: .utility)
     private var timer: DispatchSourceTimer?
 
     init(parentPID: pid_t) {
@@ -101,7 +101,7 @@ class ProcessMonitor {
                 let processes = output.components(separatedBy: .newlines)
                 return processes.contains { process in
                     let processName = process.lowercased()
-                    return processName.contains("appleblox") || processName.contains("ablox") || processName.contains("neutralino")
+                    return processName.contains("multablox") || processName.contains("neutralino")
                 }
             }
         } catch {
@@ -204,7 +204,7 @@ class LoginAppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
             defer: false
         )
 
-        window.title = "Sign in to Roblox - AppleBlox"
+        window.title = "Sign in to Roblox - MultaBlox"
         window.level = .floating
         window.delegate = self
 

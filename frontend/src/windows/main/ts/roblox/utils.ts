@@ -7,6 +7,7 @@ import { shell } from '../tools/shell';
 import shellFS from '../tools/shellfs';
 import { detectRobloxPath } from './path';
 import Logger from '@/windows/main/ts/utils/logger';
+import ProductConfig from '@root/product.config';
 
 export class RobloxUtils {
 	/** Checks if roblox is installed, and if not show a popup */
@@ -117,7 +118,7 @@ export class RobloxUtils {
 		);
 		await shellFS.writeFile(
 			path.join(savePath, 'Play Roblox.app/Contents/MacOS/launch'),
-			'#!/bin/bash\nopen appleblox://launch'
+			`#!/bin/bash\nopen ${ProductConfig.urlScheme}://launch`
 		);
 		const shortcutPath = path.join(savePath, 'Play Roblox.app');
 		await shellFS.chmod(path.join(shortcutPath, 'Contents/MacOS/launch'), '+x');

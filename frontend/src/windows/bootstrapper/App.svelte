@@ -192,7 +192,7 @@
 	<!-- Default AppleBlox bootstrapper UI -->
 	<div class="flex flex-col items-center justify-center h-screen w-screen transition-opacity duration-500 ease-in-out select-none">
 		<div class="relative z-10 text-center w-full h-full flex flex-col items-center justify-center px-[8vw] py-[6vh]">
-			<img src={Logo} alt="AppleBlox Logo" class="w-[28vmin] h-[28vmin] mx-auto mb-[4vh] object-contain" id="launch_logo" />
+			<img src={Logo} alt="MultaBlox Logo" class="w-[28vmin] h-[28vmin] mx-auto mb-[4vh] object-contain" id="launch_logo" />
 
 			<h1 class="text-[5vmin] font-semibold mb-[4vh] text-foreground leading-tight tracking-wide max-w-full" id="launch_text">
 				{text}
@@ -207,7 +207,7 @@
 				/>
 			</div>
 
-			<p class="text-[3vmin] text-foreground/70 font-medium tracking-wider mb-[2vh]">AppleBlox Bootstrapper</p>
+			<p class="text-[3vmin] text-foreground/70 font-medium tracking-wider mb-[2vh]">MultaBlox Bootstrapper</p>
 
 			<p class="text-[2.5vmin] text-foreground/50 font-mono">
 				{Math.round(progress)}%

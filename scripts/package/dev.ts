@@ -73,7 +73,7 @@ function getBinaryPath(): string {
 }
 
 function checkSidecar(): boolean {
-	const requiredFiles = ['alerter_ablox', 'discordrpc_ablox', 'urlscheme_ablox', 'bootstrap_ablox'];
+	const requiredFiles = ['alerter_multablox', 'discordrpc_multablox', 'urlscheme_multablox', 'bootstrap_multablox'];
 
 	for (const file of requiredFiles) {
 		const filePath = resolve(join('bin', file));

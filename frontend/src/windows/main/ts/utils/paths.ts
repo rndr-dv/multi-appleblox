@@ -1,9 +1,10 @@
 import { filesystem, os } from '@neutralinojs/lib';
+import ProductConfig from '@root/product.config';
 import path from 'path-browserify';
 
 /**
  * Global data directory override for testing purposes.
- * Can be set via environment variable APPLEBLOX_DATA_DIR or CLI argument --data-dir
+ * Can be set via the product data-directory environment variable or CLI argument --data-dir.
  */
 let dataDirectoryOverride: string | null = null;
 
@@ -23,7 +24,7 @@ export async function initializeDataDirectory(): Promise<void> {
 
 	// Check for environment variable
 	try {
-		const envDataDir = await os.getEnv('APPLEBLOX_DATA_DIR');
+		const envDataDir = await os.getEnv(ProductConfig.dataDirectoryEnvironmentVariable);
 		if (envDataDir) {
 			dataDirectoryOverride = envDataDir;
 			return;
@@ -34,10 +35,10 @@ export async function initializeDataDirectory(): Promise<void> {
 }
 
 /**
- * Get the base data directory for AppleBlox.
+ * Get the base data directory for MultaBlox.
  * Returns the configured test directory or the default user data directory.
  *
- * @returns The absolute path to the AppleBlox data directory
+ * @returns The absolute path to the MultaBlox data directory
  */
 export async function getDataDir(): Promise<string> {
 	if (dataDirectoryOverride) {
@@ -45,7 +46,7 @@ export async function getDataDir(): Promise<string> {
 	}
 
 	const home = await os.getEnv('HOME');
-	return path.join(home, 'Library/Application Support/AppleBlox');
+	return path.join(home, 'Library/Application Support', ProductConfig.dataDirectoryName);
 }
 
 /**

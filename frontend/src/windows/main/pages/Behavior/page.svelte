@@ -1,8 +1,6 @@
 <script lang="ts">
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { events, os } from '@neutralinojs/lib';
-	import { BugOff, CopyCheck, PictureInPicture, Play } from 'lucide-svelte';
-	import path from 'path-browserify';
+	import { events } from '@neutralinojs/lib';
+	import { LayoutGrid, Play } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import LoadingSpinner from '../../components/loading-spinner.svelte';
 	import PathSelector from '../../components/roblox/path-selector.svelte';
@@ -11,29 +9,15 @@
 	import Panel from '../../components/settings/panel.svelte';
 	import type { SettingsOutput } from '../../components/settings/types';
 	import Roblox from '../../ts/roblox';
-	import MultiInstanceWarning from './multi-instance-warning.svelte';
 	import Logger from '@/windows/main/ts/utils/logger';
 
 	export let render = true;
 
-	let closeRobloxPopup = false;
-
 	async function buttonClicked(e: CustomEvent) {
 		const { id } = e.detail;
 		switch (id) {
-			case 'multi_roblox_btn':
-				await Roblox.Utils.enableMultiInstance();
-				break;
-			case 'open_instance_btn':
-				const rbxPath = Roblox.path;
-				if (!rbxPath) {
-					toast.error('Could not find Roblox installation');
-					break;
-				}
-				os.spawnProcess(`${path.join(rbxPath, 'Contents/MacOS/RobloxPlayer')}; exit`);
-				break;
-			case 'close_roblox_btn':
-				closeRobloxPopup = true;
+			case 'open_instances_btn':
+				await events.broadcast('ui:change_page', { id: 'instances' });
 				break;
 			case 'create_shortcut_btn':
 				try {
@@ -147,34 +131,14 @@
 		.addCategory((category) =>
 			category
 				.setName('Multiple Instances')
-				.setDescription('Run multiple Roblox instances simultaneously')
+				.setDescription('Launch and manage isolated Roblox accounts')
 				.setId('multi_instances')
-				.addCustom({
-					component: MultiInstanceWarning,
-					id: 'multi_instance_warning',
-					label: '',
-					description: '',
-				})
 				.addButton({
-					label: 'Enable Multi-Instance',
-					description: 'Update patch to allow multiple Roblox windows',
-					id: 'multi_roblox_btn',
+					label: 'Open Instances',
+					description: 'Manage accounts, windows, tiling, and input mirroring',
+					id: 'open_instances_btn',
 					variant: 'default',
-					icon: { component: CopyCheck },
-				})
-				.addButton({
-					label: 'New Instance',
-					description: 'Open an additional Roblox instance',
-					id: 'open_instance_btn',
-					variant: 'secondary',
-					icon: { component: PictureInPicture },
-				})
-				.addButton({
-					label: 'Close All',
-					description: 'Force close all Roblox windows (You should save your progress first)',
-					id: 'close_roblox_btn',
-					variant: 'destructive',
-					icon: { component: BugOff },
+					icon: { component: LayoutGrid },
 				})
 		)
 		.build();
@@ -192,24 +156,6 @@
 		}
 	}
 </script>
-
-<AlertDialog.Root bind:open={closeRobloxPopup}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-			<AlertDialog.Description>All unsaved progress will be lost.</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action
-				on:click={async () => {
-					await Roblox.Utils.killAll();
-					toast.success('All Roblox Instances have been closed.');
-				}}>Continue</AlertDialog.Action
-			>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
 
 {#await loadOverrides()}
 	{#if render}

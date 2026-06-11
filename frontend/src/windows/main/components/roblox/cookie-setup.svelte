@@ -25,6 +25,7 @@
 	import { libraryPath } from '../../ts/libraries';
 	import { spawn } from '../../ts/tools/shell';
 	import { Curl } from '../../ts/tools/curl';
+	import { parseLoginStatus } from '../../ts/roblox/login-status';
 	import Logger from '@/windows/main/ts/utils/logger';
 	import {
 		Key,
@@ -199,7 +200,7 @@
 
 			process.on('exit', async (exitCode: number) => {
 				isWebViewLoginActive = false;
-				const status = stdoutBuffer.trim();
+				const status = parseLoginStatus(stdoutBuffer);
 
 				if (status === 'LOGIN_SUCCESS') {
 					// The native binary stores the cookie under the old 'roblox-cookie' key.

@@ -10,6 +10,7 @@ window_state_config.json
 /tests/fixtures/test-data
 playwright-report/
 test-results/
+docs/
 
 # Created by https://www.toptal.com/developers/gitignore/api/svelte,node,macos,windows,linux,git
 # Edit at https://www.toptal.com/developers/gitignore?templates=svelte,node,macos,windows,linux,git

@@ -137,7 +137,7 @@
 				break;
 			}
 			case 'open_folder':
-				shellFS.open(path.join(await os.getEnv('HOME'), 'Library', 'Application Support', 'AppleBlox'), { reveal: true });
+				shellFS.open(await getDataDir(), { reveal: true });
 				break;
 			case 'open_roblox_folder':
 				if (Roblox.path) {

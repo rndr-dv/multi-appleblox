@@ -10,6 +10,7 @@ import { shell, spawn } from '../tools/shell';
 import { getValue } from '../../components/settings';
 import { RobloxDelegate } from './delegate';
 import { sleep } from '../utils';
+import { getConfigDir } from '../utils/paths';
 
 const logger = Logger.withContext('Accounts');
 
@@ -33,8 +34,7 @@ interface AccountsData {
 }
 
 async function getAccountsFilePath(): Promise<string> {
-	const dataDir = path.join(await os.getPath('data'), 'AppleBlox', 'config');
-	return path.join(dataDir, 'accounts.json');
+	return path.join(await getConfigDir(), 'config', 'accounts.json');
 }
 
 async function loadAccountsData(): Promise<AccountsData> {
@@ -70,6 +70,13 @@ export async function getActiveAccount(): Promise<AccountInfo | null> {
 export async function getActiveUserId(): Promise<number | null> {
 	const data = await loadAccountsData();
 	return data.activeUserId;
+}
+
+export async function getAccountCredential(userId: number): Promise<string | null> {
+	if (!hasKeychainConsent()) return null;
+	const account = (await getAccounts()).find((candidate) => candidate.userId === userId);
+	if (!account) return null;
+	return retrieveCredential(keychainAccountKey(userId));
 }
 
 export async function setActiveAccount(userId: number): Promise<void> {

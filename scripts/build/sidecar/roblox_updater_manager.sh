@@ -2,16 +2,16 @@
 
 set -euo pipefail
 
-BUNDLE_ID="ch.origaming.appleblox"
-SCRIPT_NAME="roblox_updater_ablox.sh"
-PLIST_NAME="rbxupdater_ablox.plist"
+BUNDLE_ID="com.lucas.multablox"
+SCRIPT_NAME="roblox_updater_multablox.sh"
+PLIST_NAME="rbxupdater_multablox.plist"
 INSTALL_DIR="$HOME/bin"
 LAUNCH_AGENT_DIR="$HOME/Library/LaunchAgents"
 SCRIPT_INSTALL_PATH="$INSTALL_DIR/$SCRIPT_NAME"
-PLIST_INSTALL_PATH="$LAUNCH_AGENT_DIR/ch.origaming.appleblox.roblox-updater.plist"
-LOG_FILE="/tmp/roblox_updater.log"
-STDOUT_LOG="/tmp/roblox_updater_stdout.log"
-STDERR_LOG="/tmp/roblox_updater_stderr.log"
+PLIST_INSTALL_PATH="$LAUNCH_AGENT_DIR/com.lucas.multablox.roblox-updater.plist"
+LOG_FILE="/tmp/multablox_roblox_updater_manager.log"
+STDOUT_LOG="/tmp/multablox_roblox_updater_stdout.log"
+STDERR_LOG="/tmp/multablox_roblox_updater_stderr.log"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
@@ -26,12 +26,12 @@ if [[ "$(uname)" != "Darwin" ]]; then
     exit 1
 fi
 
-find_appleblox_resources() {
+find_multablox_resources() {
     local app_path
     app_path=$(mdfind "kMDItemCFBundleIdentifier == '$BUNDLE_ID'" | head -1)
 
     if [ -z "$app_path" ]; then
-        log_error "AppleBlox app not found"
+        log_error "MultaBlox app not found"
         exit 1
     fi
 
@@ -42,7 +42,7 @@ do_install() {
     log "Starting installation..."
 
     local resources_dir
-    resources_dir=$(find_appleblox_resources)
+    resources_dir=$(find_multablox_resources)
 
     local script_source="$resources_dir/$SCRIPT_NAME"
     local plist_source="$resources_dir/$PLIST_NAME"
@@ -82,6 +82,7 @@ do_install() {
 
     log "Installing Launch Agent..."
     cp "$plist_source" "$PLIST_INSTALL_PATH"
+    plutil -replace ProgramArguments.1 -string "$SCRIPT_INSTALL_PATH" "$PLIST_INSTALL_PATH"
     chmod 644 "$PLIST_INSTALL_PATH"
 
     log "Loading Launch Agent..."
@@ -129,7 +130,7 @@ do_uninstall() {
     log "Removing log files..."
     rm -f "$LOG_FILE" "$STDOUT_LOG" "$STDERR_LOG"
 
-    if [[ ! -f "$SCRIPT_INSTALL_PATH" ]] && [[ ! -f "$PLIST_INSTALL_PATH" ]] && ! launchctl list | grep -q "ch.origaming.appleblox.roblox-updater"; then
+    if [[ ! -f "$SCRIPT_INSTALL_PATH" ]] && [[ ! -f "$PLIST_INSTALL_PATH" ]] && ! launchctl list | grep -q "$BUNDLE_ID.roblox-updater"; then
         log "Uninstallation completed successfully"
     else
         log_error "Uninstallation verification failed"

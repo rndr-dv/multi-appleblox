@@ -2,6 +2,7 @@ import { getValue } from '../../components/settings';
 import { libraryPath } from '../libraries';
 import { buildCommand, spawn, type SpawnEventEmitter } from './shell';
 import Logger from '@/windows/main/ts/utils/logger';
+import ProductConfig from '@root/product.config';
 
 /**
  * Represents an action that can be associated with a notification.
@@ -176,7 +177,7 @@ export class Notification {
 				'-title',
 				this.options.title,
 				'-sender',
-				'ch.origaming.appleblox',
+				ProductConfig.bundleId,
 				...(this.options.group ? ['-group', this.options.group] : []),
 				...(this.options.timeout ? ['-timeout', Math.floor(this.options.timeout).toString()] : []),
 				...(this.options.sound ? ['-sound', this.options.sound] : []),

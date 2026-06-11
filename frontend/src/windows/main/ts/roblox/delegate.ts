@@ -3,6 +3,7 @@ import { getValue } from '../../components/settings';
 import { libraryPath } from '../libraries';
 import { shell } from '../tools/shell';
 import Logger from '@/windows/main/ts/utils/logger';
+import ProductConfig from '@root/product.config';
 
 const urlscheme = libraryPath('urlscheme');
 
@@ -21,7 +22,7 @@ export class RobloxDelegate {
 	/** Checks if the app is already redirected */
 	static async check(retoggle = false) {
 		// If it's not active but toggled in settings, retoggle.
-		const cmd = await shell(`${urlscheme}`, ['check', 'roblox-player', 'ch.origaming.appleblox'], { skipStderrCheck: true });
+		const cmd = await shell(`${urlscheme}`, ['check', 'roblox-player', ProductConfig.bundleId], { skipStderrCheck: true });
 		const toggled = cmd.stdOut.includes('true') || cmd.stdErr.includes('true');
 		if (!toggled && retoggle && (await getValue<boolean>('roblox.behavior.delegate')) === true) {
 			await this.toggle(true);
@@ -36,8 +37,8 @@ export class RobloxDelegate {
 	/** Enable/disable delegation */
 	static async toggle(delegate: boolean) {
 		if (delegate) {
-			const toggledPlayer = await setUrlscheme('roblox-player', 'ch.origaming.appleblox');
-			const toggleApp = await setUrlscheme('roblox', 'ch.origaming.appleblox');
+			const toggledPlayer = await setUrlscheme('roblox-player', ProductConfig.bundleId);
+			const toggleApp = await setUrlscheme('roblox', ProductConfig.bundleId);
 			if (!toggledPlayer.toggled || !toggleApp.toggled) {
 				toast.error("Couldn't set Roblox's URI");
 				Logger.error("Couldn't set Roblox's URI:", { app: toggleApp, player: toggledPlayer });

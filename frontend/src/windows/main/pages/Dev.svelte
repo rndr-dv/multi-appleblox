@@ -7,6 +7,7 @@
 	import Roblox from '../ts/roblox';
 	import { Notification } from '../ts/tools/notifications';
 	import Logger from '@/windows/main/ts/utils/logger';
+	import MultiInstanceFeasibility from '../components/dev/multi-instance-feasibility.svelte';
 
 	export let render = true;
 
@@ -240,6 +241,10 @@
 <div class="development-panel">
 	<Panel panel={developmentPanel} {render} on:button={handleButtonClick} />
 </div>
+
+{#if render}
+	<MultiInstanceFeasibility />
+{/if}
 
 <style>
 	.development-panel {

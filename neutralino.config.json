@@ -1,5 +1,5 @@
 {
-	"applicationId": "ch.origaming.appleblox",
+	"applicationId": "com.lucas.multablox",
 	"version": "0.9.0",
 	"defaultMode": "window",
 	"documentRoot": "/frontend/dist",
@@ -26,20 +26,20 @@
 	"modes": {
 		"window": {
 			"hidden": true,
-			"title": "AppleBlox",
+			"title": "MultaBlox",
 			"width": 1150,
 			"height": 720,
 			"minWidth": 400,
 			"minHeight": 200,
 			"exitProcessOnClose": false,
 			"useSavedState": false,
-			"extendUserAgentWith": "AppleBlox",
+			"extendUserAgentWith": "MultaBlox",
 			"resizable": false,
 			"center": true
 		}
 	},
 	"cli": {
-		"binaryName": "appleblox",
+		"binaryName": "multablox",
 		"resourcesPath": "/frontend/dist",
 		"extensionsPath": "/extensions/",
 		"binaryVersion": "6.3.0",

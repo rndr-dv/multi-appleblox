@@ -3,6 +3,7 @@ import { chmodSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Signale } from 'signale';
 import { extract } from 'tar';
+import { getAdHocCodeSignArgs } from './codesign';
 
 const DRPC_RELEASE = 'https://github.com/AppleBlox/Discord-RPC-cli/releases/download/1.0.2/discord-rpc-cli';
 const ALERTER_RELEASE = 'https://github.com/vjeantet/alerter/releases/download/1.0.1/alerter_v1.0.1_darwin_amd64.zip';
@@ -18,6 +19,7 @@ type BaseFile = {
 type CompilableFile = BaseFile & {
 	type: 'objective-c' | 'swift';
 	args: string[];
+	signingIdentifier?: string;
 };
 
 type RepoFile = {
@@ -68,6 +70,7 @@ const sidecarFiles: SidecarFile[] = [
 			'-sectcreate', '__TEXT', '__info_plist', 'scripts/build/sidecar/keychain_info.plist',
 		],
 		includeSuffix: true,
+		signingIdentifier: 'com.lucas.multablox.keychain',
 	},
 	{
 		name: 'Transparent Viewer',
@@ -86,6 +89,25 @@ const sidecarFiles: SidecarFile[] = [
 			'-Xlinker', 'scripts/build/sidecar/roblox_login_info.plist',
 		],
 		includeSuffix: true,
+	},
+	{
+		name: 'Instance Probe',
+		filename: 'instance_probe.swift',
+		type: 'swift',
+		args: ['-framework', 'ApplicationServices', '-framework', 'CoreGraphics', '-framework', 'AppKit'],
+		includeSuffix: true,
+	},
+	{
+		name: 'Input Mirror',
+		filename: 'input_mirror.swift',
+		type: 'swift',
+		args: [
+			'-framework', 'ApplicationServices', '-framework', 'CoreGraphics', '-framework', 'AppKit',
+			'-Xlinker', '-sectcreate', '-Xlinker', '__TEXT', '-Xlinker', '__info_plist',
+			'-Xlinker', 'scripts/build/sidecar/input_mirror_info.plist',
+		],
+		includeSuffix: true,
+		signingIdentifier: 'com.lucas.multablox.input-mirror',
 	},
 	{
 		name: 'Roblox Updater Script',
@@ -111,12 +133,12 @@ const downloadFiles: DownloadFile[] = [
 	{
 		name: 'Discord RPC CLI',
 		url: DRPC_RELEASE,
-		outputName: 'discordrpc_ablox',
+		outputName: 'discordrpc_multablox',
 	},
 	{
 		name: 'Alerter',
 		url: ALERTER_RELEASE,
-		outputName: 'alerter_ablox',
+		outputName: 'alerter_multablox',
 		extract: {
 			type: 'tar',
 			file: 'alerter',
@@ -128,7 +150,7 @@ const repoFiles: RepoFile[] = [
 	{
 		name: 'Virtual Display',
 		url: 'https://github.com/AppleBlox/virtualdisplay.git',
-		outputName: 'virtualdisplay_ablox',
+		outputName: 'virtualdisplay_multablox',
 		buildOutput: '.build/virtualdisplay',
 	},
 ];
@@ -182,7 +204,7 @@ function getOutputPath(filename: string, includeSuffix: boolean = false, preserv
 	const parts = filename.split('.');
 	const baseName = parts[0];
 	const extension = preserveExtension && parts.length > 1 ? `.${parts.slice(1).join('.')}` : '';
-	const suffix = includeSuffix ? '_ablox' : '';
+	const suffix = includeSuffix ? '_multablox' : '';
 	return resolve(join(outputDir, `${baseName}${suffix}${extension}`));
 }
 
@@ -238,7 +260,7 @@ async function compileFile(
 
 		// Ad-hoc code sign the binary so macOS Keychain "Always Allow" persists
 		// across app launches (the signature stays stable for the same build)
-		await Bun.spawn(['codesign', '--sign', '-', '--force', outPath]).exited;
+		await Bun.spawn(getAdHocCodeSignArgs(outPath, file.signingIdentifier)).exited;
 
 		const time = (performance.now() - perf) / 1000;
 		const outputName = outPath.split('/').pop() || '';

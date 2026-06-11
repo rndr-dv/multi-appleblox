@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>ch.origaming.appleblox.roblox-updater</string>
+    <string>com.lucas.multablox.roblox-updater</string>
     
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/usr/local/bin/roblox_updater</string>
+        <string>__MULTABLOX_ROBLOX_UPDATER_SCRIPT__</string>
     </array>
     
     <key>StartInterval</key>
@@ -18,10 +18,10 @@
     <true/>
     
     <key>StandardOutPath</key>
-    <string>/tmp/roblox_updater_stdout.log</string>
+    <string>/tmp/multablox_roblox_updater_stdout.log</string>
     
     <key>StandardErrorPath</key>
-    <string>/tmp/roblox_updater_stderr.log</string>
+    <string>/tmp/multablox_roblox_updater_stderr.log</string>
     
     <key>ProcessType</key>
     <string>Background</string>

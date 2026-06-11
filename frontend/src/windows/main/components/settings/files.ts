@@ -1,11 +1,12 @@
-import { filesystem, os } from '@neutralinojs/lib';
+import { filesystem } from '@neutralinojs/lib';
 import path from 'path-browserify';
 import shellFS from '../../ts/tools/shellfs';
 import type { SettingsOutput } from './types';
 import Logger from '@/windows/main/ts/utils/logger';
+import { getDataDir } from '../../ts/utils/paths';
 
 export async function getConfigPath(): Promise<string> {
-	return path.join(await os.getPath('data'), 'AppleBlox', 'config');
+	return path.join(await getDataDir(), 'config');
 }
 
 /** Saves the data provided to the Application Support folder */

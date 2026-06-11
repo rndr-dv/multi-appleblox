@@ -1,6 +1,7 @@
 import { libraryPath } from '../libraries';
 import { shell } from '../tools/shell';
 import Logger from '../utils/logger';
+import ProductConfig from '@root/product.config';
 
 export class RobloxUpdates {
 	/** Defines the state of background updates */
@@ -9,7 +10,7 @@ export class RobloxUpdates {
 		const running =
 			(
 				await shell(
-					`launchctl print "gui/$(id -u)/ch.origaming.appleblox.roblox-updater" &>/dev/null && echo "true" || echo "false"`,
+					`launchctl print "gui/$(id -u)/${ProductConfig.robloxUpdaterLaunchAgentId}" &>/dev/null && echo "true" || echo "false"`,
 					[],
 					{ completeCommand: true, skipStderrCheck: true }
 				)

@@ -17,7 +17,7 @@ export async function build() {
 	const architectureFilter = getArchitectureFilter();
 
 	logger.info(
-		`Building AppleBlox for macOS${architectureFilter ? ` (${architectureFilter})` : ' (all architectures)'} - Sequential Mode`
+		`Building ${BuildConfig.appName} for macOS${architectureFilter ? ` (${architectureFilter})` : ' (all architectures)'} - Sequential Mode`
 	);
 
 	// Clean build directories

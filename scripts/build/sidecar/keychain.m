@@ -1,10 +1,10 @@
 // Keychain Helper for AppleBlox
 // Securely stores and retrieves credentials using macOS Keychain
 // Usage:
-//   keychain_ablox store <service> <account>    - Reads password from stdin
-//   keychain_ablox retrieve <service> <account> - Outputs password to stdout
-//   keychain_ablox delete <service> <account>   - Removes credential
-//   keychain_ablox exists <service> <account>   - Checks if credential exists (exit 0 = yes, 1 = no)
+//   keychain_multablox store <service> <account>    - Reads password from stdin
+//   keychain_multablox retrieve <service> <account> - Outputs password to stdout
+//   keychain_multablox delete <service> <account>   - Removes credential
+//   keychain_multablox exists <service> <account>   - Checks if credential exists (exit 0 = yes, 1 = no)
 
 #import <Foundation/Foundation.h>
 #import <Security/Security.h>
@@ -40,16 +40,28 @@ void secureZeroMemory(void *ptr, size_t len) {
 
 // Store a credential in the Keychain
 int storeCredential(NSString *service, NSString *account, NSString *password) {
-    // First, try to delete any existing item
-    NSDictionary *deleteQuery = @{
+    NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *existingItemQuery = @{
         (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
         (__bridge id)kSecAttrService: service,
         (__bridge id)kSecAttrAccount: account,
     };
-    SecItemDelete((__bridge CFDictionaryRef)deleteQuery);
+    NSDictionary *updatedValues = @{
+        (__bridge id)kSecValueData: passwordData,
+    };
+    OSStatus status = SecItemUpdate(
+        (__bridge CFDictionaryRef)existingItemQuery,
+        (__bridge CFDictionaryRef)updatedValues
+    );
 
-    // Create the new item
-    NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+    if (status == errSecSuccess) {
+        return 0;
+    }
+
+    if (status != errSecItemNotFound) {
+        NSLog(@"Failed to update credential. Error code: %d", (int)status);
+        return 1;
+    }
 
     NSDictionary *addQuery = @{
         (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
@@ -60,7 +72,7 @@ int storeCredential(NSString *service, NSString *account, NSString *password) {
         (__bridge id)kSecAttrSynchronizable: @NO,  // Don't sync to iCloud Keychain
     };
 
-    OSStatus status = SecItemAdd((__bridge CFDictionaryRef)addQuery, NULL);
+    status = SecItemAdd((__bridge CFDictionaryRef)addQuery, NULL);
 
     if (status == errSecSuccess) {
         return 0;

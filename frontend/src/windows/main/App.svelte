@@ -9,11 +9,10 @@
 	import { quintOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
 	import { toast } from 'svelte-sonner';
-	import Code from './components/code.svelte';
+	import Code from './components/Code.svelte';
 	import FlagEditorPage from './components/flag-editor/flag-editor-page.svelte';
 	import Onboarding from './components/onboarding/onboarding.svelte';
 	import Sidebar from './components/sidebar/sidebar.svelte';
-	import Updater from './components/updater.svelte';
 	import Appearance from './pages/Appearance.svelte';
 	import BehaviorPage from './pages/Behavior/page.svelte';
 	import Dev from './pages/Dev.svelte';
@@ -25,12 +24,13 @@
 	import Workshop from './pages/Workshop.svelte';
 	import Account from './pages/Account.svelte';
 	import Home from './pages/Home.svelte';
+	import Instances from './pages/Instances.svelte';
 	import Roblox from './ts/roblox';
 	import { PathManager } from './ts/roblox/path-manager';
 	import { sleep } from './ts/utils/';
 	import Logger from '@/windows/main/ts/utils/logger';
 
-	let currentPage: string;
+	let currentPage = 'instances';
 	let onboardingLoaded: boolean = false;
 	let showMainContent = true;
 
@@ -170,7 +170,6 @@
 			<Mods render={false} />
 			<BehaviorPage render={false} />
 		</div>
-		<Updater />
 		<ModeWatcher track={true} />
 		<Toaster richColors id="toaster" />
 		{#if onboardingLoaded}
@@ -186,6 +185,8 @@
 				<div class="fixed overflow-y-scroll max-h-full top-0 left-48 w-[83%]" class:blur-sm={launchInfo.launching}>
 					{#if currentPage === 'home'}
 						<Home />
+					{:else if currentPage === 'instances'}
+						<Instances />
 					{:else if currentPage === 'account'}
 						<Account />
 					{:else if currentPage == 'integrations'}

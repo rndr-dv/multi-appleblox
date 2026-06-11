@@ -71,14 +71,14 @@ async function validateAndCleanup(): Promise<boolean> {
 		return false;
 	}
 
-	if (await shellFS.exists('/tmp/appleblox_bootstrapper.pid')) {
+	if (await shellFS.exists('/tmp/multablox-bootstrapper.pid')) {
 		try {
-			const oldPid = await shellFS.readFile('/tmp/appleblox_bootstrapper.pid');
+			const oldPid = await shellFS.readFile('/tmp/multablox-bootstrapper.pid');
 			await os.execCommand(`kill ${oldPid.trim()}`);
 		} catch (err) {
 			logger.debug('Could not kill old bootstrapper process:', err);
 		}
-		await shellFS.remove('/tmp/appleblox_bootstrapper.pid');
+		await shellFS.remove('/tmp/multablox-bootstrapper.pid');
 	}
 
 	if ((await shell('pgrep', ['-f', 'RobloxPlayer'], { skipStderrCheck: true })).stdOut.trim().length > 3) {
@@ -259,7 +259,7 @@ async function setupBootstrapper(): Promise<void> {
 				{ skipStderrCheck: true }
 			);
 
-			await shellFS.writeFile('/tmp/appleblox_bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
+			await shellFS.writeFile('/tmp/multablox-bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
 
 			bootstrapperProcess.on('stdOut', (data) => logger.info('[Bootstrapper]', data));
 			bootstrapperProcess.on('stdErr', (data) => logger.error('[Bootstrapper]', data));
@@ -285,7 +285,7 @@ async function setupBootstrapper(): Promise<void> {
 		logger.info(`Spawning transparent_viewer bootstrapper`);
 		bootstrapperProcess = await spawn(viewerPath, viewerArgs, { skipStderrCheck: true });
 
-		await shellFS.writeFile('/tmp/appleblox_bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
+		await shellFS.writeFile('/tmp/multablox-bootstrapper.pid', bootstrapperProcess.pid?.toString() || '');
 
 		bootstrapperProcess.on('stdOut', (data) => logger.info('[Bootstrapper]', data));
 		bootstrapperProcess.on('stdErr', (data) => logger.error('[Bootstrapper]', data));
@@ -338,8 +338,8 @@ async function cleanupBootstrapper(): Promise<void> {
 			logger.error('Error terminating bootstrapper:', e);
 		}
 		bootstrapperProcess = null;
-		if (await shellFS.exists('/tmp/appleblox_bootstrapper.pid')) {
-			await shellFS.remove('/tmp/appleblox_bootstrapper.pid');
+		if (await shellFS.exists('/tmp/multablox-bootstrapper.pid')) {
+			await shellFS.remove('/tmp/multablox-bootstrapper.pid');
 		}
 	}
 }

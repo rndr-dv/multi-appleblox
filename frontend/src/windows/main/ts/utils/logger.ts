@@ -2,6 +2,7 @@
 
 import { filesystem, os } from '@neutralinojs/lib';
 import { version } from '@root/package.json';
+import { getDataDir } from './paths';
 import path from 'path-browserify';
 import { getMode, getPosixCompatibleDate } from '.';
 
@@ -395,8 +396,7 @@ async function initializeLogPath(): Promise<void> {
 	if (isInitialized) return;
 
 	try {
-		const configPath = path.join(await os.getPath('data'), 'AppleBlox', 'config');
-		const logsDir = path.join(path.dirname(configPath), 'logs');
+		const logsDir = path.join(await getDataDir(), 'logs');
 		try {
 			if (!(await filesystem.getStats(logsDir))) {
 				await filesystem.createDirectory(logsDir);

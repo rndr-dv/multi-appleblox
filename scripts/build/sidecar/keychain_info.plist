@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>AppleBlox</string>
+	<string>MultaBlox Keychain</string>
 	<key>CFBundleName</key>
-	<string>AppleBlox</string>
+	<string>MultaBlox Keychain</string>
 	<key>CFBundleIdentifier</key>
-	<string>ch.origaming.appleblox.keychain</string>
+	<string>com.lucas.multablox.keychain</string>
 	<key>CFBundleIconFile</key>
 	<string>icon</string>
 	<key>CFBundleVersion</key>

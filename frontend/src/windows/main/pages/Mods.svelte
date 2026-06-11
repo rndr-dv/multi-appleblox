@@ -47,32 +47,14 @@
 		const { id } = e.detail;
 		switch (id) {
 			case 'custom_font':
+				const cachePath = await getFontsCacheDir();
 				for (const ext of ['ttf', 'otf', 'ttc']) {
-					const fontPath = path.join(
-						await os.getEnv('HOME'),
-						'Library',
-						'Application Support',
-						`AppleBlox/cache/fonts/CustomFont.${ext}`
-					);
-					await shellFS.remove(
-						path.join(
-							await os.getEnv('HOME'),
-							'Library',
-							'Application Support',
-							`AppleBlox/cache/fonts/LastCustomFont.${ext}`
-						),
-						{ skipStderrCheck: true }
-					);
+					const fontPath = path.join(cachePath, `CustomFont.${ext}`);
+					const lastFontPath = path.join(cachePath, `LastCustomFont.${ext}`);
+
+					await shellFS.remove(lastFontPath, { skipStderrCheck: true });
 					if (await shellFS.exists(fontPath)) {
-						await shellFS.move(
-							fontPath,
-							path.join(
-								await os.getEnv('HOME'),
-								'Library',
-								'Application Support',
-								`AppleBlox/cache/fonts/LastCustomFont.${ext}`
-							)
-						);
+						await shellFS.move(fontPath, lastFontPath);
 					}
 
 					await shellFS.remove(fontPath, { skipStderrCheck: true });

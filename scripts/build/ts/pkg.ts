@@ -1,4 +1,5 @@
 import BuildConfig from '@root/build.config';
+import ProductConfig from '@root/product.config';
 import child_process from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -25,10 +26,10 @@ async function createDMGWrapper(pkgPath: string, dmgOutput: string): Promise<voi
     mkdirSync(tmpDir, { recursive: true });
 
     try {
-        copyFileSync(pkgPath, join(tmpDir, 'Install AppleBlox.pkg'));
+        copyFileSync(pkgPath, join(tmpDir, `Install ${BuildConfig.appName}.pkg`));
         if (existsSync(dmgOutput)) rmSync(dmgOutput);
         await exec(
-            `hdiutil create -volname "AppleBlox" -srcfolder "${tmpDir}" -ov -format UDZO "${dmgOutput}"`
+            `hdiutil create -volname "${BuildConfig.appName}" -srcfolder "${tmpDir}" -ov -format UDZO "${dmgOutput}"`
         );
     } finally {
         rmSync(tmpDir, { recursive: true, force: true });
@@ -38,7 +39,7 @@ async function createDMGWrapper(pkgPath: string, dmgOutput: string): Promise<voi
 async function createPKG(appPath: string, outputPath: string) {
     const tmpDir = resolve(`.tmpbuild/pkg_${Date.now()}`);
     const scriptsDir = join(tmpDir, 'scripts');
-    const componentPkg = join(tmpDir, 'AppleBlox.pkg');
+    const componentPkg = join(tmpDir, `${BuildConfig.appName}.pkg`);
 
     mkdirSync(scriptsDir, { recursive: true });
 
@@ -50,7 +51,7 @@ async function createPKG(appPath: string, outputPath: string) {
 
     // Build component package
     await exec(
-        `pkgbuild --install-location /Applications --component "${appPath}" --scripts "${scriptsDir}" --identifier com.appleblox.pkg --version "${version}" "${componentPkg}"`
+        `pkgbuild --install-location /Applications --component "${appPath}" --scripts "${scriptsDir}" --identifier "${ProductConfig.installerPackageId}" --version "${version}" "${componentPkg}"`
     );
 
     // Patch distribution.xml template

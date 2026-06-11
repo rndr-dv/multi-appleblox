@@ -1,6 +1,7 @@
 import BuildConfig from '@root/build.config';
 import neuConfig from '@root/neutralino.config.json';
 import { version } from '@root/package.json';
+import ProductConfig from '@root/product.config';
 import { $, sleep } from 'bun';
 import { chmodSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -161,7 +162,8 @@ async function generateInfoPlist(appDist: string, logger: Signale) {
 		.replace(/{APP_MIN_OS}/g, BuildConfig.mac.minimumOS)
 		.replace(/{APP_VERSION}/g, version)
 		.replace(/{APP_COPYRIGHT}/g, copyright)
-		.replace(/{APP_URL_SCHEME_NAME}/g, urlSchemeName);
+		.replace(/{APP_URL_SCHEME_NAME}/g, urlSchemeName)
+		.replace(/{APP_URL_SCHEME}/g, ProductConfig.urlScheme);
 
 	await Bun.write(InfoPlist, InfoPlistTemplate);
 	logger.success('Generated Info.plist');
@@ -172,7 +174,7 @@ async function copyExecutables(appDist: string, executable: string, logger: Sign
 	const MacOS = resolve(appDist, appBundle, 'Contents', 'MacOS');
 	const mainPath = resolve(MacOS, 'main');
 	const bootstrapPath = resolve(MacOS, 'bootstrap');
-	const bootstrapSource = resolve('bin/bootstrap_ablox');
+	const bootstrapSource = resolve('bin/bootstrap_multablox');
 
 	// Copy main executable with retry
 	await executeWithRetry(
@@ -284,9 +286,9 @@ async function handleLibraries(appDist: string, librariesPath: string, libraries
 	// Copy libraries
 	await copyWithProgress(librariesPath, libPath, logger);
 
-	// Remove blacklisted files (bootstrap_ablox and neutralino binaries)
+	// Remove blacklisted files (bootstrap_multablox and neutralino binaries)
 	try {
-		const blacklistPattern = librariesBlacklist.map((pattern) => `${pattern}_ablox|${pattern}`).join('|');
+		const blacklistPattern = librariesBlacklist.map((pattern) => `${pattern}_multablox|${pattern}`).join('|');
 		const files = (await $`ls ${librariesPath} | grep -E '${blacklistPattern}'`.text()).split('\n');
 		files.pop(); // Remove empty last element
 

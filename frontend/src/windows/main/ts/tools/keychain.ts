@@ -1,10 +1,12 @@
 import { libraryPath } from '../libraries';
 import { shell, spawn } from './shell';
 import Logger from '@/windows/main/ts/utils/logger';
+import ProductConfig from '@root/product.config';
+import { keychainConsent } from './keychain-consent';
 
 const logger = Logger.withContext('Keychain');
 
-const SERVICE_NAME = 'ch.origaming.appleblox';
+const SERVICE_NAME = ProductConfig.keychainService;
 
 /**
  * Store a credential in the macOS Keychain
@@ -121,14 +123,12 @@ export async function hasCredential(account: string, service: string = SERVICE_N
 	}
 }
 
-let _keychainConsentGiven = false;
-
 export function hasKeychainConsent(): boolean {
-	return _keychainConsentGiven;
+	return keychainConsent.hasConsent();
 }
 
 export function grantKeychainConsent(): void {
-	_keychainConsentGiven = true;
+	keychainConsent.grantConsent();
 }
 
 export default {

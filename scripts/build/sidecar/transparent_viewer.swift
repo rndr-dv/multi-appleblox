@@ -56,9 +56,9 @@ class ProcessMonitor {
             return
         }
         
-        // Check if AppleBlox or ablox process exists
+        // Check if a MultaBlox process exists
         if !isTargetProcessRunning() {
-            print("No AppleBlox or ablox process detected. Exiting...")
+            print("No MultaBlox process detected. Exiting...")
             NSApp.terminate(nil)
         }
     }
@@ -80,7 +80,7 @@ class ProcessMonitor {
                 let processes = output.components(separatedBy: .newlines)
                 return processes.contains { process in
                     let processName = process.lowercased()
-                    return processName.contains("appleblox") || processName.contains("ablox") || processName.contains("neutralino")
+                    return processName.contains("multablox") || processName.contains("neutralino")
                 }
             }
         } catch {
@@ -104,7 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
         
         // Initial check - exit immediately if no target process found
         if !isTargetProcessRunning() {
-            print("No AppleBlox or ablox process detected at startup. Exiting...")
+            print("No MultaBlox process detected at startup. Exiting...")
             NSApp.terminate(nil)
             return
         }
@@ -255,7 +255,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
                 let processes = output.components(separatedBy: .newlines)
                 return processes.contains { process in
                     let processName = process.lowercased()
-                    return processName.contains("appleblox") || processName.contains("ablox")
+                    return processName.contains("multablox")
                 }
             }
         } catch {
