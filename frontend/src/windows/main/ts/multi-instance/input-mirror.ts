@@ -1,5 +1,5 @@
 import { libraryPath } from '../libraries';
-import { spawn } from '../tools/shell';
+import { shell, spawn } from '../tools/shell';
 import type { ManagedInstance } from './types';
 
 export interface InputMirrorSnapshot {
@@ -18,6 +18,7 @@ export interface InputMirrorProcess {
 }
 
 export type InputMirrorProcessFactory = () => Promise<InputMirrorProcess>;
+export type InputMirrorPermissionRequester = () => Promise<void>;
 export type InputMirrorListener = (snapshot: InputMirrorSnapshot) => void;
 
 interface NativeMirrorStatus {
@@ -41,7 +42,10 @@ export class InputMirrorController {
 		hotkey: 'Command+Shift+M',
 	};
 
-	constructor(private readonly createProcess: InputMirrorProcessFactory) {}
+	constructor(
+		private readonly createProcess: InputMirrorProcessFactory,
+		private readonly requestPermissions: InputMirrorPermissionRequester = async () => {}
+	) {}
 
 	subscribe(listener: InputMirrorListener): () => void {
 		this.listeners.add(listener);
@@ -64,17 +68,13 @@ export class InputMirrorController {
 			return;
 		}
 
-		const process = await this.ensureStarted();
 		const managedPids = this.instances.map((instance) => instance.process!.pid);
 		const receiverPids = this.instances
 			.filter((instance) => instance.mirrorReceiver)
 			.map((instance) => instance.process!.pid);
-		await this.send(process, {
-			command: 'configure',
-			managedPids,
-			receiverPids,
-			primaryPid: managedPids[0],
-		});
+		if (this.process) {
+			await this.sendConfiguration(this.process, managedPids, receiverPids);
+		}
 
 		if (receiverPids.length === 0 && this.state.enabled) {
 			this.update({
@@ -91,7 +91,15 @@ export class InputMirrorController {
 			this.update({ enabled: false, sourcePid: null, error: 'Select at least one mirror receiver' });
 			throw new Error('Select at least one mirror receiver');
 		}
+		if (enabled) {
+			await this.requestPermissions();
+		}
 		const process = await this.ensureStarted();
+		if (enabled) {
+			const managedPids = this.instances.map((instance) => instance.process!.pid);
+			const receiverPids = receivers.map((instance) => instance.process!.pid);
+			await this.sendConfiguration(process, managedPids, receiverPids);
+		}
 		await this.send(process, { command: 'set-enabled', enabled });
 		this.update({
 			enabled,
@@ -163,6 +171,19 @@ export class InputMirrorController {
 		await process.writeStdin(`${JSON.stringify(command)}\n`);
 	}
 
+	private async sendConfiguration(
+		process: InputMirrorProcess,
+		managedPids: number[],
+		receiverPids: number[]
+	): Promise<void> {
+		await this.send(process, {
+			command: 'configure',
+			managedPids,
+			receiverPids,
+			primaryPid: managedPids[0],
+		});
+	}
+
 	private update(patch: Partial<InputMirrorSnapshot>): void {
 		this.state = { ...this.state, ...patch };
 		for (const listener of this.listeners) listener(this.snapshot());
@@ -170,7 +191,22 @@ export class InputMirrorController {
 }
 
 export function createDefaultInputMirrorController(): InputMirrorController {
-	return new InputMirrorController(() =>
-		spawn(libraryPath('input_mirror'), [], { skipStderrCheck: true })
+	const binaryPath = libraryPath('input_mirror');
+	return new InputMirrorController(
+		() => spawn(binaryPath, [], { skipStderrCheck: true }),
+		async () => {
+			const result = await shell(binaryPath, ['--request-permissions'], {
+				skipStderrCheck: true,
+			});
+			let status: NativeMirrorStatus | null = null;
+			try {
+				status = JSON.parse(result.stdOut.trim()) as NativeMirrorStatus;
+			} catch {
+				throw new Error('Input mirror permission request returned malformed status');
+			}
+			if (result.exitCode !== 0 || status.error) {
+				throw new Error(status.error || 'Input mirror permissions were not granted');
+			}
+		}
 	);
 }

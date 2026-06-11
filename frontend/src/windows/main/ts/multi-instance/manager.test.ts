@@ -34,11 +34,24 @@ function createDependencies(
 		focus: mock().mockResolvedValue(undefined),
 		terminate: mock().mockResolvedValue(undefined),
 		sleep: mock().mockResolvedValue(undefined),
+		requestAccessibility: mock().mockResolvedValue(undefined),
 		...overrides,
 	};
 }
 
 describe('InstanceManager', () => {
+	it('requests Accessibility through its window helper', async () => {
+		const requestAccessibility = mock().mockResolvedValue(undefined);
+		const manager = new InstanceManager(
+			new InstanceRegistry(),
+			createDependencies({ requestAccessibility })
+		);
+
+		await manager.requestAccessibility();
+
+		expect(requestAccessibility).toHaveBeenCalledTimes(1);
+	});
+
 	it('launches accounts sequentially and attaches discovered windows', async () => {
 		const events: string[] = [];
 		const dependencies = createDependencies({

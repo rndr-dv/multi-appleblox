@@ -47,6 +47,6 @@
         <key>LSUIElement</key>
         <true />
         <key>NSAccessibilityUsageDescription</key>
-        <string>MultaBlox requires Accessibility access to inspect Roblox windows and test targeted input delivery.</string>
+        <string>MultaBlox requires Accessibility access to tile Roblox windows and mirror input between managed instances.</string>
     </dict>
 </plist>

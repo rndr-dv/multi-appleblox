@@ -20,6 +20,7 @@ export interface InstanceManagerDependencies {
 	focus(pid: number): Promise<void>;
 	terminate(process: RobloxProcessIdentity, force: boolean): Promise<void>;
 	sleep(milliseconds: number): Promise<void>;
+	requestAccessibility(): Promise<void>;
 }
 
 export interface InstanceMirrorSync {
@@ -98,6 +99,10 @@ export class InstanceManager {
 		} catch (error) {
 			this.lastCapabilityError = error instanceof Error ? error.message : String(error);
 		}
+	}
+
+	async requestAccessibility(): Promise<void> {
+		await this.dependencies.requestAccessibility();
 	}
 
 	async focus(instanceId: string): Promise<void> {

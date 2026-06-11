@@ -319,8 +319,43 @@ func runSelfTest() -> Never {
     exit(ok ? 0 : 1)
 }
 
+func requestPermissions() -> Never {
+    let options = [
+        kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true
+    ] as CFDictionary
+    let accessibilityGranted = AXIsProcessTrustedWithOptions(options)
+    let inputMonitoringGranted: Bool
+    if #available(macOS 10.15, *) {
+        inputMonitoringGranted = CGRequestListenEventAccess()
+    } else {
+        inputMonitoringGranted = true
+    }
+
+    let missing = [
+        accessibilityGranted ? nil : "Accessibility",
+        inputMonitoringGranted ? nil : "Input Monitoring",
+    ].compactMap { $0 }
+    guard missing.isEmpty else {
+        emit(
+            MirrorStatus(
+                type: "status",
+                enabled: false,
+                sourcePid: nil,
+                error: "\(missing.joined(separator: " and ")) access was requested. Allow MultaBlox Input Mirror in System Settings, then try again."
+            )
+        )
+        exit(5)
+    }
+    emit(MirrorStatus(type: "status", enabled: false, sourcePid: nil, error: nil))
+    exit(0)
+}
+
 if CommandLine.arguments.contains("--self-test") {
     runSelfTest()
+}
+
+if CommandLine.arguments.contains("--request-permissions") {
+    requestPermissions()
 }
 
 let state = MirrorState()

@@ -2,6 +2,21 @@ import { describe, expect, it, mock } from 'bun:test';
 import { InstanceProbe } from './probe';
 
 describe('InstanceProbe', () => {
+	it('requests Accessibility through the native helper', async () => {
+		const run = mock().mockResolvedValue({
+			exitCode: 0,
+			stdErr: '',
+			stdOut: JSON.stringify({ ok: true, command: 'request-accessibility' }),
+		});
+		const probe = new InstanceProbe('/probe', run);
+
+		await probe.requestAccessibility();
+
+		expect(run).toHaveBeenCalledWith('/probe', ['request-accessibility'], {
+			skipStderrCheck: true,
+		});
+	});
+
 	it('parses window bounds from the native JSON response', async () => {
 		const run = mock().mockResolvedValue({
 			exitCode: 0,

@@ -64,6 +64,13 @@ func pid(from arguments: [String]) -> pid_t? {
     return number
 }
 
+func requestAccessibilityPermission() -> Bool {
+    let options = [
+        kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true
+    ] as CFDictionary
+    return AXIsProcessTrustedWithOptions(options)
+}
+
 func firstWindow(for processId: pid_t) -> WindowInfo? {
     let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
     guard let raw = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
@@ -237,9 +244,23 @@ if command == "self-test" {
         ProbeResponse(
             ok: true,
             command: command,
-            commands: ["window", "display", "set-frame", "focus", "key", "click-center", "move-center", "scroll"]
+            commands: ["request-accessibility", "window", "display", "set-frame", "focus", "key", "click-center", "move-center", "scroll"]
         )
     )
+}
+
+if command == "request-accessibility" {
+    guard requestAccessibilityPermission() else {
+        emit(
+            ProbeResponse(
+                ok: false,
+                command: command,
+                error: "Accessibility access was requested. Allow MultaBlox Window Manager in System Settings, then try again."
+            ),
+            exitCode: 3
+        )
+    }
+    emit(ProbeResponse(ok: true, command: command))
 }
 
 guard AXIsProcessTrusted() else {

@@ -49,6 +49,7 @@ async function createRuntime(): Promise<InstanceRuntime> {
 			sleep: async (milliseconds) => {
 				await sleep(milliseconds);
 			},
+			requestAccessibility: () => probe.requestAccessibility(),
 		},
 		mirror
 	);

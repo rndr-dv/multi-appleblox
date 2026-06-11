@@ -94,8 +94,13 @@ const sidecarFiles: SidecarFile[] = [
 		name: 'Instance Probe',
 		filename: 'instance_probe.swift',
 		type: 'swift',
-		args: ['-framework', 'ApplicationServices', '-framework', 'CoreGraphics', '-framework', 'AppKit'],
+		args: [
+			'-framework', 'ApplicationServices', '-framework', 'CoreGraphics', '-framework', 'AppKit',
+			'-Xlinker', '-sectcreate', '-Xlinker', '__TEXT', '-Xlinker', '__info_plist',
+			'-Xlinker', 'scripts/build/sidecar/instance_probe_info.plist',
+		],
 		includeSuffix: true,
+		signingIdentifier: 'com.lucas.multablox.instance-probe',
 	},
 	{
 		name: 'Input Mirror',

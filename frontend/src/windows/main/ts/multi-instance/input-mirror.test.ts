@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 import {
 	InputMirrorController,
 	type InputMirrorProcess,
@@ -86,7 +86,7 @@ describe('InputMirrorController', () => {
 		});
 	});
 
-	it('starts lazily and configures managed and receiver PIDs', async () => {
+	it('does not start the native helper until mirroring is enabled', async () => {
 		const { controller, process } = await createController();
 
 		await controller.configure([
@@ -94,12 +94,57 @@ describe('InputMirrorController', () => {
 			instance('second', processB, true),
 		]);
 
+		expect(process.writes).toEqual([]);
+	});
+
+	it('requests permissions before starting and configuring the native helper', async () => {
+		const process = new FakeMirrorProcess();
+		const events: string[] = [];
+		const controller = new InputMirrorController(
+			async () => {
+				events.push('start');
+				return process;
+			},
+			async () => {
+				events.push('permissions');
+			}
+		);
+		await controller.configure([
+			instance('first', processA, false),
+			instance('second', processB, true),
+		]);
+
+		await controller.setEnabled(true);
+
+		expect(events).toEqual(['permissions', 'start']);
 		expect(JSON.parse(process.writes[0])).toEqual({
 			command: 'configure',
 			managedPids: [410, 512],
 			receiverPids: [512],
 			primaryPid: 410,
 		});
+		expect(JSON.parse(process.writes[1])).toEqual({
+			command: 'set-enabled',
+			enabled: true,
+		});
+	});
+
+	it('does not start mirroring when permission approval is still pending', async () => {
+		const process = new FakeMirrorProcess();
+		const factory = mock().mockResolvedValue(process);
+		const controller = new InputMirrorController(factory, async () => {
+			throw new Error('Accessibility access was requested');
+		});
+		await controller.configure([
+			instance('first', processA, false),
+			instance('second', processB, true),
+		]);
+
+		await expect(controller.setEnabled(true)).rejects.toThrow(
+			'Accessibility access was requested'
+		);
+
+		expect(factory).not.toHaveBeenCalled();
 	});
 
 	it('sends in-app enabled state to the sidecar', async () => {
@@ -123,6 +168,7 @@ describe('InputMirrorController', () => {
 			instance('first', processA, false),
 			instance('second', processB, true),
 		]);
+		await controller.setEnabled(true);
 		controller.handleOutput('{"type":"status","enabled":true,"sourcePid":410}\n');
 
 		await controller.configure([instance('first', processA, false)]);
@@ -146,6 +192,7 @@ describe('InputMirrorController', () => {
 			instance('first', processA, false),
 			instance('second', processB, true),
 		]);
+		await controller.setEnabled(true);
 		controller.handleOutput('{"type":"status","enabled":true,"sourcePid":410}\n');
 
 		process.emit('exit', 4);

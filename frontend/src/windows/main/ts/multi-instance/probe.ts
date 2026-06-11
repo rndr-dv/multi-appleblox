@@ -35,6 +35,10 @@ export class InstanceProbe {
 		private readonly run: ProbeRunner = shell
 	) {}
 
+	async requestAccessibility(): Promise<void> {
+		await this.execute(['request-accessibility']);
+	}
+
 	async window(pid: number): Promise<ProbeWindow> {
 		const response = await this.execute(['window', '--pid', String(pid)]);
 		if (!response.window) throw new Error('Instance probe returned no window');

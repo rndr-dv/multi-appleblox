@@ -119,9 +119,16 @@
 
 	async function tileWindows(): Promise<void> {
 		if (!runtime) return;
-		await runtime.manager.tile();
-		capabilityError = runtime.manager.capabilityError();
-		if (capabilityError) toast.error(capabilityError);
+		try {
+			await runtime.manager.requestAccessibility();
+			await runtime.manager.tile();
+			capabilityError = runtime.manager.capabilityError();
+			if (capabilityError) toast.error(capabilityError);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			capabilityError = message;
+			toast.error(message);
+		}
 	}
 
 	async function setMirrorEnabled(enabled: boolean): Promise<void> {
