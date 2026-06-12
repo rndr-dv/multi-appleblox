@@ -1,7 +1,7 @@
 import type { ProbeWindow } from './probe';
 import { findLiveProcess, type RobloxProcessIdentity } from './processes';
 import { InstanceRegistry, type InstanceListener } from './registry';
-import { calculateTileFrames } from './tile-layout';
+import { calculateTileFrames, type TileCapacity } from './tile-layout';
 import type { InstanceAccount, LaunchTarget, ManagedInstance } from './types';
 
 export interface InstanceManagerDependencies {
@@ -30,6 +30,7 @@ export interface InstanceMirrorSync {
 
 export class InstanceManager {
 	private lastCapabilityError: string | null = null;
+	private tileCapacity: TileCapacity = 4;
 
 	constructor(
 		private readonly registry: InstanceRegistry,
@@ -68,7 +69,7 @@ export class InstanceManager {
 			this.registry.setWindow(instance.id, window);
 			this.lastCapabilityError = null;
 			const runningWithWindows = this.runningWithWindows();
-			if (runningWithWindows.length <= 4) {
+			if (runningWithWindows.length <= this.tileCapacity) {
 				await this.tile();
 			}
 		} catch (error) {
@@ -77,7 +78,7 @@ export class InstanceManager {
 	}
 
 	async tile(): Promise<void> {
-		const instances = this.runningWithWindows().slice(0, 4);
+		const instances = this.runningWithWindows().slice(0, this.tileCapacity);
 		if (instances.length === 0) return;
 
 		try {
@@ -103,6 +104,10 @@ export class InstanceManager {
 
 	async requestAccessibility(): Promise<void> {
 		await this.dependencies.requestAccessibility();
+	}
+
+	setTileCapacity(capacity: TileCapacity): void {
+		this.tileCapacity = capacity;
 	}
 
 	async focus(instanceId: string): Promise<void> {

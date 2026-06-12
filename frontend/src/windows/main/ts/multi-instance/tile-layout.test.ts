@@ -25,12 +25,27 @@ describe('calculateTileFrames', () => {
 		]);
 	});
 
-	it('returns at most four frames', () => {
+	it('uses a three-by-two grid for five or six windows', () => {
 		expect(calculateTileFrames(display, 5, 8)).toEqual([
-			{ x: 8, y: 8, width: 488, height: 388 },
-			{ x: 504, y: 8, width: 488, height: 388 },
-			{ x: 8, y: 404, width: 488, height: 388 },
-			{ x: 504, y: 404, width: 488, height: 388 },
+			{ x: 8, y: 8, width: 322, height: 388 },
+			{ x: 338, y: 8, width: 322, height: 388 },
+			{ x: 668, y: 8, width: 322, height: 388 },
+			{ x: 8, y: 404, width: 322, height: 388 },
+			{ x: 338, y: 404, width: 322, height: 388 },
+		]);
+	});
+
+	it('uses a three-by-three grid and returns at most nine frames', () => {
+		expect(calculateTileFrames(display, 10, 8)).toEqual([
+			{ x: 8, y: 8, width: 322, height: 256 },
+			{ x: 338, y: 8, width: 322, height: 256 },
+			{ x: 668, y: 8, width: 322, height: 256 },
+			{ x: 8, y: 272, width: 322, height: 256 },
+			{ x: 338, y: 272, width: 322, height: 256 },
+			{ x: 668, y: 272, width: 322, height: 256 },
+			{ x: 8, y: 536, width: 322, height: 256 },
+			{ x: 338, y: 536, width: 322, height: 256 },
+			{ x: 668, y: 536, width: 322, height: 256 },
 		]);
 	});
 });

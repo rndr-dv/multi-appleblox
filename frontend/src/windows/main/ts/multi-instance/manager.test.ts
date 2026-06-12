@@ -220,6 +220,48 @@ describe('InstanceManager', () => {
 		expect(setFrame).toHaveBeenCalledTimes(callsBeforeFifth);
 	});
 
+	it('auto-tiles up to the selected six-window layout', async () => {
+		const processes = [1, 2, 3, 4, 5, 6, 7].map((userId) => ({
+			pid: 600 + userId,
+			startedAt: `Tue Jun  9 12:0${userId}:00 2026`,
+			command: `/profiles/${userId}/Roblox.app/Contents/MacOS/RobloxPlayer`,
+		}));
+		const setFrame = mock().mockResolvedValue(undefined);
+		const manager = new InstanceManager(
+			new InstanceRegistry(),
+			createDependencies({
+				launch: async (account, launchTarget, registry) => {
+					const instance = registry.begin(account, launchTarget, 'isolated-profile');
+					registry.markRunning(instance.id, processes[account.userId - 1]);
+					return registry.get(instance.id)!;
+				},
+				snapshot: mock().mockResolvedValue(processes),
+				discoverWindow: async (pid) => ({ ...windowA, windowId: pid }),
+				setFrame,
+			})
+		);
+		const accounts = processes.map((_, index) => ({
+			userId: index + 1,
+			username: `user${index + 1}`,
+			displayName: `User ${index + 1}`,
+		}));
+		manager.setTileCapacity(6);
+
+		await manager.launch(accounts.slice(0, 6), target);
+		expect(setFrame.mock.calls.slice(-6).map((call) => call[1])).toEqual([
+			{ x: 8, y: 8, width: 322, height: 388 },
+			{ x: 338, y: 8, width: 322, height: 388 },
+			{ x: 668, y: 8, width: 322, height: 388 },
+			{ x: 8, y: 404, width: 322, height: 388 },
+			{ x: 338, y: 404, width: 322, height: 388 },
+			{ x: 668, y: 404, width: 322, height: 388 },
+		]);
+
+		const callsBeforeSeventh = setFrame.mock.calls.length;
+		await manager.launch([accounts[6]], target);
+		expect(setFrame).toHaveBeenCalledTimes(callsBeforeSeventh);
+	});
+
 	it('synchronizes registry changes with the input mirror controller', async () => {
 		const configured: ManagedInstance[][] = [];
 		const mirror = {

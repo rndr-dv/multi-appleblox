@@ -7,6 +7,7 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Input } from '$lib/components/ui/input';
 	import { Switch } from '$lib/components/ui/switch';
+	import * as Select from '$lib/components/ui/select';
 	import {
 		ExternalLink,
 		Check,
@@ -24,6 +25,7 @@
 	import { getInstanceRuntime, type InstanceRuntime } from '../ts/multi-instance/runtime';
 	import type { InputMirrorSnapshot } from '../ts/multi-instance/input-mirror';
 	import { parseLaunchTarget } from '../ts/multi-instance/launch-target';
+	import type { TileCapacity } from '../ts/multi-instance/tile-layout';
 	import type { ManagedInstance } from '../ts/multi-instance/types';
 	import Logger from '@/windows/main/ts/utils/logger';
 
@@ -34,6 +36,11 @@
 		error: null,
 		hotkey: 'Command+Shift+M',
 	};
+	const tileLayouts: { value: string; capacity: TileCapacity; label: string }[] = [
+		{ value: '4', capacity: 4, label: '4 windows (2x2)' },
+		{ value: '6', capacity: 6, label: '6 windows (3x2)' },
+		{ value: '9', capacity: 9, label: '9 windows (3x3)' },
+	];
 
 	let runtime: InstanceRuntime | null = null;
 	let accounts: AccountInfo[] = [];
@@ -43,6 +50,7 @@
 	let placeId = '';
 	let loading = true;
 	let launching = false;
+	let tileCapacity: TileCapacity = 4;
 	let capabilityError: string | null = null;
 	let unsubscribeInstances: (() => void) | null = null;
 	let unsubscribeMirror: (() => void) | null = null;
@@ -129,6 +137,17 @@
 			capabilityError = message;
 			toast.error(message);
 		}
+	}
+
+	function setTileCapacity(capacity: TileCapacity): void {
+		tileCapacity = capacity;
+		runtime?.manager.setTileCapacity(capacity);
+	}
+
+	function handleTileLayoutChange(selected: { value: string } | undefined): void {
+		if (!selected) return;
+		const layout = tileLayouts.find((candidate) => candidate.value === selected.value);
+		if (layout) setTileCapacity(layout.capacity);
 	}
 
 	async function setMirrorEnabled(enabled: boolean): Promise<void> {
@@ -261,13 +280,32 @@
 				<div>
 					<p class="text-xl font-bold text-primary">Window Controls</p>
 					<p class="text-[13px] text-primary saturate-[20%] brightness-200 font-semibold">
-						The first four managed windows tile automatically
+						The first {tileCapacity} managed windows tile automatically
 					</p>
 				</div>
-				<Button variant="outline" on:click={tileWindows} disabled={!instances.some((instance) => instance.state === 'running')}>
-					<Grid2X2 class="w-4 h-4 mr-2" />
-					Tile Windows
-				</Button>
+				<div class="flex items-center gap-2">
+					<Select.Root
+						selected={tileLayouts.find((layout) => layout.capacity === tileCapacity)}
+						onSelectedChange={handleTileLayoutChange}
+					>
+						<Select.Trigger class="w-[170px]" aria-label="Tile layout">
+							<Select.Value />
+						</Select.Trigger>
+						<Select.Content>
+							{#each tileLayouts as layout}
+								<Select.Item value={layout.value} label={layout.label}>{layout.label}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+					<Button
+						variant="outline"
+						on:click={tileWindows}
+						disabled={!instances.some((instance) => instance.state === 'running')}
+					>
+						<Grid2X2 class="w-4 h-4 mr-2" />
+						Tile Windows
+					</Button>
+				</div>
 			</div>
 
 			<div class="mt-5 flex items-center justify-between rounded-lg border border-border/60 p-4">
