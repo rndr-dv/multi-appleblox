@@ -7,7 +7,7 @@
 	<key>CFBundleName</key>
 	<string>MultaBlox Keychain</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.lucas.multablox.keychain</string>
+	<string>com.multablox.app.keychain</string>
 	<key>CFBundleIconFile</key>
 	<string>icon</string>
 	<key>CFBundleVersion</key>

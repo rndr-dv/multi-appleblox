@@ -95,7 +95,7 @@ final class MirrorState {
     }
 }
 
-private let outputQueue = DispatchQueue(label: "com.lucas.multablox.input-mirror.output")
+private let outputQueue = DispatchQueue(label: "com.multablox.app.input-mirror.output")
 private var eventTap: CFMachPort?
 
 func emit<T: Encodable>(_ value: T) {
@@ -320,10 +320,7 @@ func runSelfTest() -> Never {
 }
 
 func requestPermissions() -> Never {
-    let options = [
-        kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true
-    ] as CFDictionary
-    let accessibilityGranted = AXIsProcessTrustedWithOptions(options)
+    let accessibilityGranted = AXIsProcessTrusted()
     let inputMonitoringGranted: Bool
     if #available(macOS 10.15, *) {
         inputMonitoringGranted = CGRequestListenEventAccess()
@@ -341,7 +338,7 @@ func requestPermissions() -> Never {
                 type: "status",
                 enabled: false,
                 sourcePid: nil,
-                error: "\(missing.joined(separator: " and ")) access was requested. Allow MultaBlox Input Mirror in System Settings, then try again."
+                error: "macOS denied \(missing.joined(separator: " and ")) to MultaBlox. Enable MultaBlox in the matching Privacy & Security sections, restart the app, then try again."
             )
         )
         exit(5)
@@ -360,7 +357,7 @@ if CommandLine.arguments.contains("--request-permissions") {
 
 let state = MirrorState()
 guard AXIsProcessTrusted() else {
-    emitStatus(state, error: "Accessibility permission is not granted")
+    emitStatus(state, error: "macOS denied Accessibility to MultaBlox")
     exit(3)
 }
 

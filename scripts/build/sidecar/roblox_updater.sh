@@ -7,7 +7,7 @@ CLIENT_SETTINGS_URL="https://clientsettings.roblox.com/v2/client-version/MacPlay
 DOWNLOAD_HOST="https://setup-aws.rbxcdn.com"
 TEMP_DIR="/tmp/multablox_roblox_update_$$"
 LOG_FILE="/tmp/multablox_roblox_updater.log"
-BUNDLE_ID="com.lucas.multablox"
+BUNDLE_ID="com.multablox.app"
 ROBLOX_PROCESS_NAME="RobloxPlayer"
 MAX_WAIT_TIME=900
 

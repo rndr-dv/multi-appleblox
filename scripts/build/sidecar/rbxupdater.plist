@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.lucas.multablox.roblox-updater</string>
+    <string>com.multablox.app.roblox-updater</string>
     
     <key>ProgramArguments</key>
     <array>

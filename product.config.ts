@@ -1,13 +1,13 @@
 export const ProductConfig = {
 	name: 'MultaBlox',
 	slug: 'multablox',
-	bundleId: 'com.lucas.multablox',
+	bundleId: 'com.multablox.app',
 	urlScheme: 'multablox',
 	dataDirectoryName: 'MultaBlox',
 	dataDirectoryEnvironmentVariable: 'MULTABLOX_DATA_DIR',
-	keychainService: 'com.lucas.multablox',
-	robloxUpdaterLaunchAgentId: 'com.lucas.multablox.roblox-updater',
-	installerPackageId: 'com.lucas.multablox.pkg',
+	keychainService: 'com.multablox.app',
+	robloxUpdaterLaunchAgentId: 'com.multablox.app.roblox-updater',
+	installerPackageId: 'com.multablox.app.pkg',
 } as const;
 
 export default ProductConfig;

@@ -7,3 +7,24 @@ export function getAdHocCodeSignArgs(path: string, identifier?: string): string[
 
 	return [...args, path];
 }
+
+export function getAdHocBundleSignArgs(path: string, identifier: string): string[] {
+	return [
+		'codesign',
+		'--sign',
+		'-',
+		'--force',
+		'--identifier',
+		identifier,
+		'--requirements',
+		`=designated => identifier "${identifier}"`,
+		path,
+	];
+}
+
+export function getAppCodeSignSteps(appPath: string, identifier: string): string[][] {
+	return [
+		getAdHocBundleSignArgs(`${appPath}/Contents/MacOS/main`, identifier),
+		getAdHocBundleSignArgs(appPath, identifier),
+	];
+}

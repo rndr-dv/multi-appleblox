@@ -6,6 +6,7 @@ import { createDefaultInputMirrorController, type InputMirrorController } from '
 import { defaultLaunchDependencies, launchAccount } from './launcher';
 import { InstanceManager } from './manager';
 import { InstanceProbe } from './probe';
+import { requestAppAccessibility } from './permissions';
 import { snapshotRobloxProcesses } from './processes';
 import { InstanceRegistry } from './registry';
 
@@ -52,7 +53,10 @@ async function createRuntime(): Promise<InstanceRuntime> {
 			sleep: async (milliseconds) => {
 				await sleep(milliseconds);
 			},
-			requestAccessibility: () => probe.requestAccessibility(),
+			requestAccessibility: async () => {
+				await requestAppAccessibility();
+				await probe.requestAccessibility();
+			},
 		},
 		mirror
 	);

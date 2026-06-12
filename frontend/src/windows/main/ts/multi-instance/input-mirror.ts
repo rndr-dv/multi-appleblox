@@ -1,6 +1,7 @@
 import { libraryPath } from '../libraries';
 import { shell, spawn } from '../tools/shell';
 import type { ManagedInstance } from './types';
+import { requestAppAccessibility } from './permissions';
 
 export interface InputMirrorSnapshot {
 	enabled: boolean;
@@ -195,6 +196,7 @@ export function createDefaultInputMirrorController(): InputMirrorController {
 	return new InputMirrorController(
 		() => spawn(binaryPath, [], { skipStderrCheck: true }),
 		async () => {
+			await requestAppAccessibility();
 			const result = await shell(binaryPath, ['--request-permissions'], {
 				skipStderrCheck: true,
 			});

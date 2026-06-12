@@ -27,7 +27,7 @@ function dependencies(
 describe('accountProfileBundleId', () => {
 	it('creates a deterministic bundle identifier from the Roblox user ID', () => {
 		expect(accountProfileBundleId(10107317232)).toBe(
-			'com.lucas.multablox.roblox-profile.u10107317232'
+			'com.multablox.app.roblox-profile.u10107317232'
 		);
 	});
 });

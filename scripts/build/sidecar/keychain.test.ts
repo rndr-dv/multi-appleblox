@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 const isMacOS = process.platform === 'darwin';
 const tempDir = isMacOS ? mkdtempSync(join(tmpdir(), 'multablox-keychain-test-')) : '';
 const helperPath = join(tempDir, 'keychain_multablox');
-const service = `com.lucas.multablox.test.${process.pid}.${Date.now()}`;
+const service = `com.multablox.app.test.${process.pid}.${Date.now()}`;
 const account = 'credential-update';
 
 function run(command: string[], stdin?: string): Bun.SpawnSyncReturns<Buffer, Buffer> {

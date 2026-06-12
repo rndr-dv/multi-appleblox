@@ -9,7 +9,7 @@
 	<key>NSApplicationName</key>
 	<string>MultaBlox Roblox Login</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.lucas.multablox.login</string>
+	<string>com.multablox.app.login</string>
 	<key>CFBundleIconFile</key>
 	<string>icon</string>
 	<key>CFBundleVersion</key>

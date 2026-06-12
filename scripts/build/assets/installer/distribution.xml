@@ -6,12 +6,12 @@
     <domains enable_localSystem="true" enable_currentUserHome="true" />
     <choices-outline>
         <line choice="default">
-            <line choice="com.lucas.multablox.pkg" />
+            <line choice="com.multablox.app.pkg" />
         </line>
     </choices-outline>
     <choice id="default" />
-    <choice id="com.lucas.multablox.pkg" visible="false">
-        <pkg-ref id="com.lucas.multablox.pkg" />
+    <choice id="com.multablox.app.pkg" visible="false">
+        <pkg-ref id="com.multablox.app.pkg" />
     </choice>
-    <pkg-ref id="com.lucas.multablox.pkg" version="__VERSION__" onConclusion="none">MultaBlox.pkg</pkg-ref>
+    <pkg-ref id="com.multablox.app.pkg" version="__VERSION__" onConclusion="none">MultaBlox.pkg</pkg-ref>
 </installer-gui-script>

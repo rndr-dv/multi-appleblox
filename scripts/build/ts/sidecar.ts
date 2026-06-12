@@ -70,7 +70,7 @@ const sidecarFiles: SidecarFile[] = [
 			'-sectcreate', '__TEXT', '__info_plist', 'scripts/build/sidecar/keychain_info.plist',
 		],
 		includeSuffix: true,
-		signingIdentifier: 'com.lucas.multablox.keychain',
+		signingIdentifier: 'com.multablox.app.keychain',
 	},
 	{
 		name: 'Transparent Viewer',
@@ -100,7 +100,7 @@ const sidecarFiles: SidecarFile[] = [
 			'-Xlinker', 'scripts/build/sidecar/instance_probe_info.plist',
 		],
 		includeSuffix: true,
-		signingIdentifier: 'com.lucas.multablox.instance-probe',
+		signingIdentifier: 'com.multablox.app.instance-probe',
 	},
 	{
 		name: 'Input Mirror',
@@ -112,7 +112,7 @@ const sidecarFiles: SidecarFile[] = [
 			'-Xlinker', 'scripts/build/sidecar/input_mirror_info.plist',
 		],
 		includeSuffix: true,
-		signingIdentifier: 'com.lucas.multablox.input-mirror',
+		signingIdentifier: 'com.multablox.app.input-mirror',
 	},
 	{
 		name: 'Roblox Updater Script',

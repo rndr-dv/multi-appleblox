@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.lucas.multablox.input-mirror</string>
+	<string>com.multablox.app.input-mirror</string>
 	<key>CFBundleName</key>
 	<string>MultaBlox Input Mirror</string>
 </dict>

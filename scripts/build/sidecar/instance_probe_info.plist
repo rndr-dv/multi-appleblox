@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.lucas.multablox.instance-probe</string>
+	<string>com.multablox.app.instance-probe</string>
 	<key>CFBundleName</key>
 	<string>MultaBlox Window Manager</string>
 </dict>

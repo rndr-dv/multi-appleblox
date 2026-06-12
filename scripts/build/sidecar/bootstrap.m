@@ -218,7 +218,26 @@
 }
 
 - (void)setupLogging {
-    NSString *logPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"latest.log"];
+    NSString *dataDirectory = [[[NSProcessInfo processInfo] environment] objectForKey:@"MULTABLOX_DATA_DIR"];
+    if (dataDirectory.length == 0) {
+        NSArray<NSString *> *applicationSupportDirectories =
+            NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+        NSString *applicationSupportDirectory = applicationSupportDirectories.firstObject;
+        dataDirectory = [applicationSupportDirectory stringByAppendingPathComponent:@"MultaBlox"];
+    }
+
+    NSString *logsDirectory = [dataDirectory stringByAppendingPathComponent:@"logs"];
+    NSError *directoryError = nil;
+    [[NSFileManager defaultManager] createDirectoryAtPath:logsDirectory
+                              withIntermediateDirectories:YES
+                                               attributes:nil
+                                                    error:&directoryError];
+    if (directoryError) {
+        NSLog(@"Failed to create log directory: %@", directoryError.localizedDescription);
+        return;
+    }
+
+    NSString *logPath = [logsDirectory stringByAppendingPathComponent:@"latest.log"];
     [[NSFileManager defaultManager] createFileAtPath:logPath contents:nil attributes:nil];
     self.logFileHandle = [NSFileHandle fileHandleForWritingAtPath:logPath];
     [self.logFileHandle seekToEndOfFile];

@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-BUNDLE_ID="com.lucas.multablox"
+BUNDLE_ID="com.multablox.app"
 SCRIPT_NAME="roblox_updater_multablox.sh"
 PLIST_NAME="rbxupdater_multablox.plist"
 INSTALL_DIR="$HOME/bin"
 LAUNCH_AGENT_DIR="$HOME/Library/LaunchAgents"
 SCRIPT_INSTALL_PATH="$INSTALL_DIR/$SCRIPT_NAME"
-PLIST_INSTALL_PATH="$LAUNCH_AGENT_DIR/com.lucas.multablox.roblox-updater.plist"
+PLIST_INSTALL_PATH="$LAUNCH_AGENT_DIR/com.multablox.app.roblox-updater.plist"
 LOG_FILE="/tmp/multablox_roblox_updater_manager.log"
 STDOUT_LOG="/tmp/multablox_roblox_updater_stdout.log"
 STDERR_LOG="/tmp/multablox_roblox_updater_stderr.log"

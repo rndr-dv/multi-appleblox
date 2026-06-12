@@ -20,7 +20,7 @@ Main launcher that bootstraps the AppleBlox application with proper configuratio
 - **Version Compatibility**: Detects macOS version and provides fallback options for unsupported versions (<11)
 - **Permission Management**: Automatically requests accessibility permissions when needed
 - **Instance Management**: Terminates duplicate instances when launching via deeplink
-- **Logging**: Comprehensive logging to `latest.log` for debugging
+- **Logging**: Comprehensive logging to `~/Library/Application Support/MultaBlox/logs/latest.log` for debugging
 
 **macOS Version Handling:**
 

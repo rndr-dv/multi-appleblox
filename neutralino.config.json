@@ -1,5 +1,5 @@
 {
-	"applicationId": "com.lucas.multablox",
+	"applicationId": "com.multablox.app",
 	"version": "0.9.0",
 	"defaultMode": "window",
 	"documentRoot": "/frontend/dist",

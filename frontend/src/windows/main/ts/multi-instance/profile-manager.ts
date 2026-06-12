@@ -1,7 +1,7 @@
 import path from 'path-browserify';
 import type { InstanceAccount } from './types';
 
-const ROBLOX_PROFILE_BUNDLE_PREFIX = 'com.lucas.multablox.roblox-profile';
+const ROBLOX_PROFILE_BUNDLE_PREFIX = 'com.multablox.app.roblox-profile';
 
 export interface ProfileManagerDependencies {
 	dataDir: string;

@@ -4,7 +4,7 @@ import Security
 
 // MARK: - Keychain Helper
 
-let keychainService = "com.lucas.multablox"
+let keychainService = "com.multablox.app"
 let keychainAccount = "roblox-cookie"
 
 func secureZeroMemory(_ data: inout Data) {
@@ -48,7 +48,7 @@ func storeInKeychain(_ cookie: String) -> Bool {
 
 class ProcessMonitor {
     private var parentPID: pid_t
-    private var monitorQueue = DispatchQueue(label: "com.lucas.multablox.processmonitor", qos: .utility)
+    private var monitorQueue = DispatchQueue(label: "com.multablox.app.processmonitor", qos: .utility)
     private var timer: DispatchSourceTimer?
 
     init(parentPID: pid_t) {

@@ -7,6 +7,7 @@ import { chmodSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Signale } from 'signale';
 import { buildLiquidGlassIcons } from './liquid-glass-icons';
+import { getAppCodeSignSteps } from './codesign';
 import {
 	copyWithProgress,
 	createProgressLogger,
@@ -104,6 +105,9 @@ export async function macBuildSingle(arch: string, distPath: string, librariesPa
 		// Handle libraries
 		await handleLibraries(appDist, Libraries, LibrariesBlacklist, logger);
 
+		// Sign the main executable and complete app bundle with stable identities.
+		await signAppBundle(appDist, logger);
+
 		// Verify app bundle structure
 		await verifyAppBundle(appDist, logger);
 
@@ -112,6 +116,28 @@ export async function macBuildSingle(arch: string, distPath: string, librariesPa
 		logger.fatal(`Failed to build mac_${arch}: ${error}`);
 		throw error;
 	}
+}
+
+async function runChecked(args: string[]): Promise<void> {
+	const process = Bun.spawn(args, {
+		stdout: 'inherit',
+		stderr: 'inherit',
+	});
+	const exitCode = await process.exited;
+	if (exitCode !== 0) {
+		throw new Error(`${args[0]} exited with code ${exitCode}`);
+	}
+}
+
+async function signAppBundle(appDist: string, logger: Signale) {
+	const appPath = resolve(appDist, `${BuildConfig.appName}.app`);
+	const appIdentifier = neuConfig.applicationId;
+
+	for (const signArgs of getAppCodeSignSteps(appPath, appIdentifier)) {
+		await runChecked(signArgs);
+	}
+	await runChecked(['codesign', '--verify', '--deep', '--strict', '--verbose=2', appPath]);
+	logger.success('Signed app bundle with stable identity');
 }
 
 async function validateRequiredFiles(arch: string, logger: Signale) {
