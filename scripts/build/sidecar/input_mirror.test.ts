@@ -39,5 +39,6 @@ test.skipIf(!isMacOS)('native input mirror passes its deterministic self-test', 
 		coordinateTransform: true,
 		protocolParsing: true,
 		syntheticTagging: true,
+		mouseEventReconstruction: true,
 	});
 });

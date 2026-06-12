@@ -25,6 +25,7 @@ struct SelfTestStatus: Codable {
     let coordinateTransform: Bool
     let protocolParsing: Bool
     let syntheticTagging: Bool
+    let mouseEventReconstruction: Bool
 }
 
 struct MirrorSnapshot {
@@ -169,6 +170,43 @@ func isMouseEvent(_ type: CGEventType) -> Bool {
     ].contains(type)
 }
 
+func reconstructedMouseEvent(
+    type: CGEventType,
+    source event: CGEvent,
+    location: CGPoint
+) -> CGEvent? {
+    let rawButton = max(0, event.getIntegerValueField(.mouseEventButtonNumber))
+    let button = CGMouseButton(rawValue: UInt32(rawButton)) ?? .left
+    guard let mirrored = CGEvent(
+        mouseEventSource: nil,
+        mouseType: type,
+        mouseCursorPosition: location,
+        mouseButton: button
+    ) else {
+        return nil
+    }
+
+    mirrored.flags = event.flags
+    mirrored.setIntegerValueField(
+        .mouseEventDeltaX,
+        value: event.getIntegerValueField(.mouseEventDeltaX)
+    )
+    mirrored.setIntegerValueField(
+        .mouseEventDeltaY,
+        value: event.getIntegerValueField(.mouseEventDeltaY)
+    )
+    mirrored.setIntegerValueField(
+        .mouseEventClickState,
+        value: event.getIntegerValueField(.mouseEventClickState)
+    )
+    mirrored.setDoubleValueField(
+        .mouseEventPressure,
+        value: event.getDoubleValueField(.mouseEventPressure)
+    )
+    mirrored.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
+    return mirrored
+}
+
 func isMirrorHotkey(_ type: CGEventType, _ event: CGEvent) -> Bool {
     guard
         (type == .keyDown || type == .keyUp),
@@ -264,15 +302,25 @@ let mirrorCallback: CGEventTapCallBack = { _, type, event, userInfo in
         : [:]
     let sourceFrame = frames[sourcePid]
     for targetPid in targets {
-        guard let clonedEvent = event.copy() else {
-            continue
-        }
-        clonedEvent.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
-
+        let targetLocation: CGPoint
         if let sourceFrame, let targetFrame = frames[targetPid] {
-            clonedEvent.location = transformPoint(event.location, from: sourceFrame, to: targetFrame)
+            targetLocation = transformPoint(event.location, from: sourceFrame, to: targetFrame)
+        } else {
+            targetLocation = event.location
         }
-        clonedEvent.postToPid(targetPid)
+
+        let mirroredEvent: CGEvent?
+        if isMouseEvent(type) {
+            mirroredEvent = reconstructedMouseEvent(
+                type: type,
+                source: event,
+                location: targetLocation
+            )
+        } else {
+            mirroredEvent = event.copy()
+            mirroredEvent?.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
+        }
+        mirroredEvent?.postToPid(targetPid)
     }
     if state.updateSource(sourcePid) {
         emitStatus(state, sourcePid: sourcePid)
@@ -307,13 +355,35 @@ func runSelfTest() -> Never {
     let syntheticTagging =
         testEvent?.getIntegerValueField(.eventSourceUserData) == syntheticEventTag
 
-    let ok = coordinateTransform && protocolParsing && syntheticTagging
+    let sourceMouseEvent = CGEvent(
+        mouseEventSource: nil,
+        mouseType: .mouseMoved,
+        mouseCursorPosition: CGPoint(x: 10, y: 20),
+        mouseButton: .left
+    )
+    sourceMouseEvent?.setIntegerValueField(.mouseEventDeltaX, value: 4)
+    sourceMouseEvent?.setIntegerValueField(.mouseEventDeltaY, value: -3)
+    let mirroredMouseEvent = sourceMouseEvent.flatMap {
+        reconstructedMouseEvent(
+            type: .mouseMoved,
+            source: $0,
+            location: CGPoint(x: 110, y: 220)
+        )
+    }
+    let mouseEventReconstruction =
+        mirroredMouseEvent?.location == CGPoint(x: 110, y: 220) &&
+        mirroredMouseEvent?.getIntegerValueField(.mouseEventDeltaX) == 4 &&
+        mirroredMouseEvent?.getIntegerValueField(.mouseEventDeltaY) == -3 &&
+        mirroredMouseEvent?.getIntegerValueField(.eventSourceUserData) == syntheticEventTag
+
+    let ok = coordinateTransform && protocolParsing && syntheticTagging && mouseEventReconstruction
     emit(
         SelfTestStatus(
             ok: ok,
             coordinateTransform: coordinateTransform,
             protocolParsing: protocolParsing,
-            syntheticTagging: syntheticTagging
+            syntheticTagging: syntheticTagging,
+            mouseEventReconstruction: mouseEventReconstruction
         )
     )
     exit(ok ? 0 : 1)
