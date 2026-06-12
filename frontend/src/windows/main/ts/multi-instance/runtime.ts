@@ -42,9 +42,12 @@ async function createRuntime(): Promise<InstanceRuntime> {
 			setFrame: (pid, frame) => probe.setFrame(pid, frame),
 			focus: (pid) => probe.focus(pid),
 			terminate: async (process, force) => {
-				await shell('kill', force ? ['-9', process.pid] : [process.pid], {
+				const result = await shell('kill', force ? ['-9', process.pid] : [process.pid], {
 					skipStderrCheck: true,
 				});
+				if (result.exitCode !== 0) {
+					throw new Error(result.stdErr.trim() || `Failed to close Roblox process ${process.pid}`);
+				}
 			},
 			sleep: async (milliseconds) => {
 				await sleep(milliseconds);

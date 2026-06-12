@@ -118,14 +118,64 @@ describe('InstanceManager', () => {
 
 	it('closes only the verified managed process', async () => {
 		const terminate = mock().mockResolvedValue(undefined);
+		const snapshot = mock()
+			.mockResolvedValueOnce([processA, processB])
+			.mockResolvedValueOnce([processA, processB])
+			.mockResolvedValueOnce([processB]);
 		const registry = new InstanceRegistry();
-		const manager = new InstanceManager(registry, createDependencies({ terminate }));
+		const manager = new InstanceManager(registry, createDependencies({ snapshot, terminate }));
 		const [instance] = await manager.launch([first], target);
 
 		await manager.close(instance.id);
 
 		expect(terminate).toHaveBeenCalledWith(processA, false);
+		expect(terminate).toHaveBeenCalledTimes(1);
 		expect(registry.get(instance.id)).toBeNull();
+	});
+
+	it('force-closes a verified managed process that ignores graceful termination', async () => {
+		const terminate = mock().mockResolvedValue(undefined);
+		const snapshot = mock()
+			.mockResolvedValueOnce([processA, processB])
+			.mockResolvedValueOnce([processA, processB])
+			.mockResolvedValueOnce([processA, processB])
+			.mockResolvedValueOnce([processB]);
+		const registry = new InstanceRegistry();
+		const manager = new InstanceManager(registry, createDependencies({ snapshot, terminate }));
+		const [instance] = await manager.launch([first], target);
+
+		await manager.close(instance.id);
+
+		expect(terminate.mock.calls).toEqual([
+			[processA, false],
+			[processA, true],
+		]);
+		expect(registry.get(instance.id)).toBeNull();
+	});
+
+	it('rediscovers windows that were missed before Accessibility was granted', async () => {
+		const registry = new InstanceRegistry();
+		const discoverWindow = mock()
+			.mockRejectedValueOnce(new Error('Accessibility permission is not granted'))
+			.mockResolvedValueOnce(windowA);
+		const setFrame = mock().mockResolvedValue(undefined);
+		const manager = new InstanceManager(
+			registry,
+			createDependencies({ discoverWindow, setFrame })
+		);
+		const [instance] = await manager.launch([first], target);
+
+		expect(instance.window).toBeNull();
+		await manager.tile();
+
+		expect(registry.get(instance.id)?.window).toEqual(windowA);
+		expect(setFrame).toHaveBeenCalledWith(processA.pid, {
+			x: 8,
+			y: 8,
+			width: 984,
+			height: 784,
+		});
+		expect(manager.capabilityError()).toBeNull();
 	});
 
 	it('removes a managed instance after its Roblox process closes externally', async () => {

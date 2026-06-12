@@ -147,30 +147,59 @@ func visibleDisplay(for processId: pid_t) -> FrameInfo? {
 }
 
 func setFrame(for processId: pid_t, frame: CGRect) -> Bool {
-    guard let window = accessibilityWindow(for: processId) else {
-        return false
+    let fullScreenAttribute = "AXFullScreen" as CFString
+    if let window = accessibilityWindow(for: processId) {
+        var rawFullScreen: CFTypeRef?
+        let fullScreenResult = AXUIElementCopyAttributeValue(
+            window,
+            fullScreenAttribute,
+            &rawFullScreen
+        )
+        if
+            fullScreenResult == .success,
+            let isFullScreen = rawFullScreen as? Bool,
+            isFullScreen
+        {
+            _ = AXUIElementSetAttributeValue(
+                window,
+                fullScreenAttribute,
+                kCFBooleanFalse
+            )
+            usleep(500_000)
+        }
     }
 
-    var position = frame.origin
-    var size = frame.size
-    guard
-        let positionValue = AXValueCreate(.cgPoint, &position),
-        let sizeValue = AXValueCreate(.cgSize, &size)
-    else {
-        return false
-    }
+    for _ in 0..<10 {
+        guard let window = accessibilityWindow(for: processId) else {
+            usleep(100_000)
+            continue
+        }
 
-    let positionResult = AXUIElementSetAttributeValue(
-        window,
-        kAXPositionAttribute as CFString,
-        positionValue
-    )
-    let sizeResult = AXUIElementSetAttributeValue(
-        window,
-        kAXSizeAttribute as CFString,
-        sizeValue
-    )
-    return positionResult == .success && sizeResult == .success
+        var position = frame.origin
+        var size = frame.size
+        guard
+            let positionValue = AXValueCreate(.cgPoint, &position),
+            let sizeValue = AXValueCreate(.cgSize, &size)
+        else {
+            return false
+        }
+
+        let positionResult = AXUIElementSetAttributeValue(
+            window,
+            kAXPositionAttribute as CFString,
+            positionValue
+        )
+        let sizeResult = AXUIElementSetAttributeValue(
+            window,
+            kAXSizeAttribute as CFString,
+            sizeValue
+        )
+        if positionResult == .success && sizeResult == .success {
+            return true
+        }
+        usleep(100_000)
+    }
+    return false
 }
 
 func focus(processId: pid_t) -> Bool {

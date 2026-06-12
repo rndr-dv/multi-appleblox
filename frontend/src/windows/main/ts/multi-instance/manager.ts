@@ -78,6 +78,7 @@ export class InstanceManager {
 	}
 
 	async tile(): Promise<void> {
+		await this.discoverMissingWindows();
 		const instances = this.runningWithWindows().slice(0, this.tileCapacity);
 		if (instances.length === 0) return;
 
@@ -120,6 +121,15 @@ export class InstanceManager {
 		this.registry.markClosing(instanceId);
 		try {
 			await this.dependencies.terminate(process, false);
+			await this.dependencies.sleep(500);
+			const liveProcess = findLiveProcess(process, await this.dependencies.snapshot());
+			if (liveProcess) {
+				await this.dependencies.terminate(liveProcess, true);
+				await this.dependencies.sleep(250);
+				if (findLiveProcess(process, await this.dependencies.snapshot())) {
+					throw new Error(`Roblox process ${process.pid} did not exit`);
+				}
+			}
 			this.registry.remove(instanceId);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
@@ -194,6 +204,21 @@ export class InstanceManager {
 		return this.registry
 			.list()
 			.filter((instance) => instance.state === 'running' && instance.process && instance.window);
+	}
+
+	private async discoverMissingWindows(): Promise<void> {
+		const missing = this.registry
+			.list()
+			.filter((instance) => instance.state === 'running' && instance.process && !instance.window);
+		for (const instance of missing) {
+			try {
+				const window = await this.dependencies.discoverWindow(instance.process!.pid);
+				this.registry.setWindow(instance.id, window);
+				this.lastCapabilityError = null;
+			} catch (error) {
+				this.lastCapabilityError = error instanceof Error ? error.message : String(error);
+			}
+		}
 	}
 
 	private async requireLiveOwned(instanceId: string): Promise<RobloxProcessIdentity> {

@@ -217,6 +217,17 @@ function getSourcePath(filename: string): string {
 	return resolve(join('scripts/build/sidecar', filename));
 }
 
+async function runChecked(args: string[]): Promise<void> {
+	const process = Bun.spawn(args, {
+		stdout: 'inherit',
+		stderr: 'inherit',
+	});
+	const exitCode = await process.exited;
+	if (exitCode !== 0) {
+		throw new Error(`${args[0]} exited with code ${exitCode}`);
+	}
+}
+
 async function compileFile(
 	file: CompilableFile,
 	logger: Signale,
@@ -232,7 +243,7 @@ async function compileFile(
 	try {
 		if (file.type === 'objective-c') {
 			const args = ['gcc', ...compileArgs.gcc.base, ...fileArgs, filePath, '-o', outPath];
-			await Bun.spawn(args).exited;
+			await runChecked(args);
 			chmodSync(outPath, 0o755);
 		} else if (file.type === 'swift') {
 			const targets = compileArgs.swiftc.targets;
@@ -240,7 +251,7 @@ async function compileFile(
 			if (targets.length === 1) {
 				// Single architecture
 				const args = ['swiftc', filePath, '-o', outPath, '-target', targets[0], ...fileArgs];
-				await Bun.spawn(args).exited;
+				await runChecked(args);
 				chmodSync(outPath, 0o755);
 			} else {
 				// Universal: compile for each target, then lipo merge
@@ -249,10 +260,10 @@ async function compileFile(
 					const archName = target.split('-')[0]; // x86_64 or arm64
 					const tempOut = `${outPath}.${archName}`;
 					const args = ['swiftc', filePath, '-o', tempOut, '-target', target, ...fileArgs];
-					await Bun.spawn(args).exited;
+					await runChecked(args);
 					tempOutputs.push(tempOut);
 				}
-				await Bun.spawn(['lipo', '-create', ...tempOutputs, '-output', outPath]).exited;
+				await runChecked(['lipo', '-create', ...tempOutputs, '-output', outPath]);
 				chmodSync(outPath, 0o755);
 				// Clean up temp files
 				for (const temp of tempOutputs) {
@@ -265,7 +276,7 @@ async function compileFile(
 
 		// Ad-hoc code sign the binary so macOS Keychain "Always Allow" persists
 		// across app launches (the signature stays stable for the same build)
-		await Bun.spawn(getAdHocCodeSignArgs(outPath, file.signingIdentifier)).exited;
+		await runChecked(getAdHocCodeSignArgs(outPath, file.signingIdentifier));
 
 		const time = (performance.now() - perf) / 1000;
 		const outputName = outPath.split('/').pop() || '';
@@ -483,5 +494,5 @@ export async function buildSidecar(arch: BuildArch = 'universal', outputDir?: st
 
 if (import.meta.main) {
 	const arch = (process.env.BUILD_ARCH?.toLowerCase() as BuildArch) || 'universal';
-	buildSidecar(arch);
+	await buildSidecar(arch);
 }
