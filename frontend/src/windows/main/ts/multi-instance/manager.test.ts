@@ -42,14 +42,19 @@ function createDependencies(
 describe('InstanceManager', () => {
 	it('requests Accessibility through its window helper', async () => {
 		const requestAccessibility = mock().mockResolvedValue(undefined);
+		const discoverWindow = mock().mockRejectedValue(
+			new Error('Accessibility permission is not granted')
+		);
 		const manager = new InstanceManager(
 			new InstanceRegistry(),
-			createDependencies({ requestAccessibility })
+			createDependencies({ discoverWindow, requestAccessibility })
 		);
+		await manager.launch([first], target);
 
 		await manager.requestAccessibility();
 
 		expect(requestAccessibility).toHaveBeenCalledTimes(1);
+		expect(manager.capabilityError()).toBeNull();
 	});
 
 	it('launches accounts sequentially and attaches discovered windows', async () => {

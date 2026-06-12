@@ -71,12 +71,12 @@ func requestAccessibilityPermission() -> Bool {
     return AXIsProcessTrustedWithOptions(options)
 }
 
-func firstWindow(for processId: pid_t) -> WindowInfo? {
+func firstVisibleWindow(for processId: pid_t) -> WindowInfo? {
     let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
     guard let raw = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
         return nil
     }
-    for item in raw {
+    let candidates = raw.compactMap { item -> WindowInfo? in
         guard
             let ownerPid = item[kCGWindowOwnerPID as String] as? Int,
             ownerPid == Int(processId),
@@ -88,7 +88,7 @@ func firstWindow(for processId: pid_t) -> WindowInfo? {
             rectangle.width > 0,
             rectangle.height > 0
         else {
-            continue
+            return nil
         }
         return WindowInfo(
             windowId: number.uint32Value,
@@ -98,7 +98,27 @@ func firstWindow(for processId: pid_t) -> WindowInfo? {
             height: rectangle.height
         )
     }
-    return nil
+    return candidates.max { left, right in
+        left.width * left.height < right.width * right.height
+    }
+}
+
+func activate(processId: pid_t) -> Bool {
+    guard let application = NSRunningApplication(processIdentifier: processId) else {
+        return false
+    }
+    return application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+}
+
+func firstWindow(for processId: pid_t) -> WindowInfo? {
+    if let window = firstVisibleWindow(for: processId) {
+        return window
+    }
+    guard activate(processId: processId) else {
+        return nil
+    }
+    usleep(500_000)
+    return firstVisibleWindow(for: processId)
 }
 
 func accessibilityWindow(for processId: pid_t) -> AXUIElement? {
@@ -148,6 +168,12 @@ func visibleDisplay(for processId: pid_t) -> FrameInfo? {
 
 func setFrame(for processId: pid_t, frame: CGRect) -> Bool {
     let fullScreenAttribute = "AXFullScreen" as CFString
+    if accessibilityWindow(for: processId) == nil {
+        guard activate(processId: processId) else {
+            return false
+        }
+        usleep(500_000)
+    }
     if let window = accessibilityWindow(for: processId) {
         var rawFullScreen: CFTypeRef?
         let fullScreenResult = AXUIElementCopyAttributeValue(
@@ -204,12 +230,11 @@ func setFrame(for processId: pid_t, frame: CGRect) -> Bool {
 
 func focus(processId: pid_t) -> Bool {
     guard
-        let application = NSRunningApplication(processIdentifier: processId),
         let window = accessibilityWindow(for: processId)
     else {
         return false
     }
-    let activated = application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+    let activated = activate(processId: processId)
     let raised = AXUIElementPerformAction(window, kAXRaiseAction as CFString) == .success
     return activated && raised
 }

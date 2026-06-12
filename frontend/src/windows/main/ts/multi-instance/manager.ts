@@ -105,6 +105,7 @@ export class InstanceManager {
 
 	async requestAccessibility(): Promise<void> {
 		await this.dependencies.requestAccessibility();
+		this.lastCapabilityError = null;
 	}
 
 	setTileCapacity(capacity: TileCapacity): void {
